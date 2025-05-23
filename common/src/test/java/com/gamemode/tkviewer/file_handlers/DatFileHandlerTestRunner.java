@@ -133,6 +133,39 @@ public class DatFileHandlerTestRunner {
         return baos.toByteArray();
     }
 
+    // Helper to create minimal PAL file data (single palette)
+    private static byte[] createDummyPalBytes(int numColors) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        // Header "DLPalette" (9 bytes)
+        baos.write("DLPalette".getBytes(StandardCharsets.US_ASCII));
+        // Unknown bytes 1 (15 bytes)
+        baos.write(new byte[15]);
+        // Animation color count (1 byte) - set to 0 for simplicity
+        baos.write((byte)0);
+        // Unknown bytes 2 (7 bytes)
+        baos.write(new byte[7]);
+        // Animation color offsets (0 * 2 bytes) - empty
+
+        // Colors (numColors * 4 bytes each)
+        ByteBuffer colorBuffer = ByteBuffer.allocate(numColors * 4);
+        colorBuffer.order(ByteOrder.LITTLE_ENDIAN); // PalFileHandler reads colors as int LE
+        for (int i = 0; i < numColors; i++) {
+            // Simple ARGB color: A=255, R=i, G=i, B=i
+            // PalFileHandler reads int as B,G,R,A - so we write it in that order for LE.
+            // Or, more simply, PalFileHandler uses `new Color(this.readInt(false, true))`
+            // and Color constructor `public Color(long rgba)` expects standard ARGB.
+            // So, pack as standard ARGB int.
+            int val = i % 256;
+            int argb = (255 << 24) | (val << 16) | (val << 8) | val;
+            colorBuffer.putInt(argb);
+        }
+        baos.write(colorBuffer.array());
+
+        return baos.toByteArray();
+    }
+
+
     private static File createTemporaryDatFile(String testFileName, List<String> fileNames, List<byte[]> fileContents) throws IOException {
         byte[] datBytes = createDatFileBytes(fileNames, fileContents);
         File tempFile = new File(tempFolder, testFileName);
@@ -235,6 +268,85 @@ public class DatFileHandlerTestRunner {
         System.out.println("testExtractSprites_epfWithZeroDimensions PASSED.");
     }
 
+    public static void testExtractPalettes_withPals() throws IOException {
+        System.out.println("Running testExtractPalettes_withPals...");
+        List<String> fileNames = new ArrayList<>();
+        fileNames.add("paletteA.pal");
+        fileNames.add("dummy.txt");
+        fileNames.add("paletteB.pal");
+
+        List<byte[]> fileContents = new ArrayList<>();
+        fileContents.add(createDummyPalBytes(256)); // Standard 256 colors
+        fileContents.add("some text data".getBytes(StandardCharsets.UTF_8));
+        fileContents.add(createDummyPalBytes(256));
+
+        File datFile = createTemporaryDatFile("test_with_pals.dat", fileNames, fileContents);
+        DatFileHandler datHandler = new DatFileHandler(datFile); // isBaram = false by default
+
+        Map<String, PalFileHandler> extractedPals = datHandler.getExtractedPalettes();
+
+        assertNotNull("Extracted palettes map should not be null", extractedPals);
+        assertEquals("Should find 2 PAL files", 2, extractedPals.size());
+        assertTrue("Map should contain paletteA.pal", extractedPals.containsKey("paletteA.pal"));
+        assertTrue("Map should contain paletteB.pal", extractedPals.containsKey("paletteB.pal"));
+
+        PalFileHandler palA = extractedPals.get("paletteA.pal");
+        assertNotNull("PalFileHandler for paletteA.pal should not be null", palA);
+        assertNotNull("palA.palettes list should not be null", palA.palettes);
+        assertEquals("palA.palettes list should contain 1 palette", 1, palA.palettes.size());
+        assertEquals("Palette A should have 256 colors", 256, palA.palettes.get(0).getColors().size());
+
+        PalFileHandler palB = extractedPals.get("paletteB.pal");
+        assertNotNull("PalFileHandler for paletteB.pal should not be null", palB);
+        assertNotNull("palB.palettes list should not be null", palB.palettes);
+        assertEquals("palB.palettes list should contain 1 palette", 1, palB.palettes.size());
+        assertEquals("Palette B should have 256 colors", 256, palB.palettes.get(0).getColors().size());
+        
+        System.out.println("testExtractPalettes_withPals PASSED.");
+    }
+
+    public static void testExtractPalettes_noPals() throws IOException {
+        System.out.println("Running testExtractPalettes_noPals...");
+        List<String> fileNames = new ArrayList<>();
+        fileNames.add("sprite1.epf");
+        fileNames.add("image.png");
+
+        List<byte[]> fileContents = new ArrayList<>();
+        fileContents.add(createDummyEpfBytes((short) 1, (short)16, (short)16));
+        fileContents.add("dummy png data".getBytes(StandardCharsets.UTF_8));
+
+        File datFile = createTemporaryDatFile("test_no_pals.dat", fileNames, fileContents);
+        DatFileHandler datHandler = new DatFileHandler(datFile);
+
+        Map<String, PalFileHandler> extractedPals = datHandler.getExtractedPalettes();
+        assertNotNull("Extracted palettes map should not be null", extractedPals);
+        assertTrue("Extracted palettes map should be empty", extractedPals.isEmpty());
+        System.out.println("testExtractPalettes_noPals PASSED.");
+    }
+    
+    public static void testExtractPalettes_malformedPal() throws IOException {
+        System.out.println("Running testExtractPalettes_malformedPal...");
+        List<String> fileNames = new ArrayList<>();
+        fileNames.add("corrupt.pal");
+        fileNames.add("good.pal");
+
+        List<byte[]> fileContents = new ArrayList<>();
+        fileContents.add("This is not a valid PAL file.".getBytes(StandardCharsets.UTF_8)); // Malformed
+        fileContents.add(createDummyPalBytes(256)); // Valid
+
+        File datFile = createTemporaryDatFile("test_malformed_pal.dat", fileNames, fileContents);
+        // Errors from PalFileHandler constructor are caught and printed to System.err by DatFileHandler
+        // We just need to ensure DatFileHandler itself doesn't crash.
+        DatFileHandler datHandler = new DatFileHandler(datFile); 
+
+        Map<String, PalFileHandler> extractedPals = datHandler.getExtractedPalettes();
+        assertNotNull("Extracted palettes map should not be null", extractedPals);
+        assertEquals("Should only contain the valid PAL file", 1, extractedPals.size());
+        assertTrue("Map should contain good.pal", extractedPals.containsKey("good.pal"));
+        assertFalse("Map should not contain corrupt.pal", extractedPals.containsKey("corrupt.pal"));
+        System.out.println("testExtractPalettes_malformedPal PASSED (assuming error for corrupt.pal was logged).");
+    }
+
 
     public static void main(String[] args) throws IOException { // Added "throws IOException"
         try {
@@ -296,6 +408,40 @@ public class DatFileHandlerTestRunner {
                 passCount++;
             } catch (Throwable e) {
                 System.err.println("testExtractSprites_epfWithZeroDimensions: FAILED - " + e.getMessage());
+                e.printStackTrace(System.err);
+                System.err.println();
+                failCount++;
+            }
+
+            // New tests for PAL extraction
+            try {
+                testExtractPalettes_withPals();
+                System.out.println("testExtractPalettes_withPals: PASSED\n");
+                passCount++;
+            } catch (Throwable e) {
+                System.err.println("testExtractPalettes_withPals: FAILED - " + e.getMessage());
+                e.printStackTrace(System.err);
+                System.err.println();
+                failCount++;
+            }
+
+            try {
+                testExtractPalettes_noPals();
+                System.out.println("testExtractPalettes_noPals: PASSED\n");
+                passCount++;
+            } catch (Throwable e) {
+                System.err.println("testExtractPalettes_noPals: FAILED - " + e.getMessage());
+                e.printStackTrace(System.err);
+                System.err.println();
+                failCount++;
+            }
+            
+            try {
+                testExtractPalettes_malformedPal();
+                System.out.println("testExtractPalettes_malformedPal: PASSED\n");
+                passCount++;
+            } catch (Throwable e) {
+                System.err.println("testExtractPalettes_malformedPal: FAILED - " + e.getMessage());
                 e.printStackTrace(System.err);
                 System.err.println();
                 failCount++;

@@ -12,20 +12,19 @@ import java.util.List;
 public class SpritePanel extends JPanel {
 
     private List<Frame> sprites;
-    private Palette palette;
+    private Palette palette; // Current palette in use
     private static final int PADDING = 10; // Padding around sprites and the panel itself
 
-    public SpritePanel(List<Frame> sprites, PalFileHandler palFileHandler) {
+    public SpritePanel(List<Frame> sprites, Palette initialPalette) {
         this.sprites = sprites;
-        if (palFileHandler != null && !palFileHandler.palettes.isEmpty()) {
-            // Use the first palette by default
-            this.palette = palFileHandler.palettes.get(0);
+        if (initialPalette != null) {
+            this.palette = initialPalette;
         } else {
             // Fallback to a default grayscale palette if no palette is provided
             this.palette = createDefaultPalette();
-            JOptionPane.showMessageDialog(this,
-                    "Palette file not loaded or is empty. Using a default grayscale palette.",
-                    "Palette Warning", JOptionPane.WARNING_MESSAGE);
+            // Warning dialog is now handled by SpriteViewerFrame if no palettes are found at all.
+            // If a null initialPalette is passed here, it means either no palettes were found,
+            // or the intention is to start with grayscale.
         }
 
         setBackground(Color.DARK_GRAY);
@@ -157,5 +156,19 @@ public class SpritePanel extends JPanel {
             maxHeightInRow = Math.max(maxHeightInRow, sprite.getHeight());
         }
         g2d.dispose();
+    }
+
+    /**
+     * Sets a new palette for rendering sprites and triggers a repaint.
+     * @param newPalette The new Palette object to use. If null, a default grayscale palette will be used.
+     */
+    public void setPalette(Palette newPalette) {
+        if (newPalette != null) {
+            this.palette = newPalette;
+        } else {
+            System.out.println("SpritePanel: Received null newPalette, falling back to default grayscale.");
+            this.palette = createDefaultPalette();
+        }
+        repaint(); // Trigger a repaint to use the new palette
     }
 }

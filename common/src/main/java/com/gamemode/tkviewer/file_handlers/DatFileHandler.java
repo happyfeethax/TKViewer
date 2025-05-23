@@ -20,6 +20,7 @@ public class DatFileHandler extends FileHandler {
     public String filePath;
     public long fileCount;
     public Map<String, ByteBuffer> files = new LinkedHashMap<>();
+    private Map<String, PalFileHandler> extractedPalettes;
 
     public DatFileHandler(Path filepath) {
         this(filepath.toFile(), false);
@@ -41,6 +42,7 @@ public class DatFileHandler extends FileHandler {
         super(file);
         this.isBaram = isBaram;
         this.filePath = this.file.getPath();
+        this.extractedPalettes = new LinkedHashMap<>(); // Initialize the new map
         this.fileCount = this.readInt(true, true) - 1;
         for (int i = 0; i < this.fileCount; i++) {
             long dataLocation = this.readInt(true, true);
@@ -51,10 +53,30 @@ public class DatFileHandler extends FileHandler {
                 this.seek(totalRead - readLength, false);
             }
             long nextFileLocation = this.filePosition;
-            long fileSize = this.readInt(true, true) - dataLocation;
+            // Read the start of the next file's TOC entry to determine current file's size
+            // This is how the original DatFileHandler seems to operate.
+            long nextDataLocationForSizeCalc = this.readInt(true, true);
+            long fileSize = nextDataLocationForSizeCalc - dataLocation;
+
             this.seek(dataLocation, true);
             ByteBuffer fileData = this.readBytes(fileSize, true);
-            files.put(fileName, fileData);
+            files.put(fileName, fileData); // Store raw data for all files
+
+            // Check for PAL files
+            if (fileName.toLowerCase().endsWith(".pal")) {
+                System.out.println("Found PAL file in DAT: " + fileName);
+                ByteBuffer palDataBuffer = fileData.duplicate();
+                palDataBuffer.rewind();
+                try {
+                    PalFileHandler palHandler = new PalFileHandler(palDataBuffer);
+                    this.extractedPalettes.put(fileName, palHandler);
+                    System.out.println("Successfully parsed and stored PAL file: " + fileName);
+                } catch (Exception e) {
+                    System.err.println("Error parsing PAL file '" + fileName + "' from DAT: " + e.getMessage());
+                    e.printStackTrace(System.err);
+                }
+            }
+
             this.seek(nextFileLocation, true);
         }
 
@@ -217,5 +239,16 @@ public class DatFileHandler extends FileHandler {
     public ByteBuffer toByteBuffer() {
         // Not implemented
         return null;
+    }
+
+    /**
+     * Returns the map of PAL files that were automatically parsed from this DAT archive.
+     * The keys are the filenames as they appeared in the DAT file.
+     * The values are the {@link PalFileHandler} instances for each parsed PAL file.
+     *
+     * @return A map of extracted {@link PalFileHandler}s.
+     */
+    public Map<String, PalFileHandler> getExtractedPalettes() {
+        return this.extractedPalettes;
     }
 }

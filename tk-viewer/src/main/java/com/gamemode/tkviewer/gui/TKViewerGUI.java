@@ -799,48 +799,43 @@ public class TKViewerGUI extends JFrame implements ActionListener {
         if (datResult == JFileChooser.APPROVE_OPTION) {
             File selectedDatFile = datFileChooser.getSelectedFile();
 
-            JFileChooser palFileChooser = new JFileChooser();
-            palFileChooser.setDialogTitle("Select a Palette file (*.pal)");
-            // Try to set initial directory to where DAT was, or a common assets/palette directory
-            File datFileParentDir = selectedDatFile.getParentFile();
-            if (datFileParentDir != null && datFileParentDir.exists()) {
-                palFileChooser.setCurrentDirectory(datFileParentDir);
-            } else if (nexusDataPath.toFile().exists()) {
-                palFileChooser.setCurrentDirectory(nexusDataPath.toFile());
-            } else {
-                palFileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
-            }
-            palFileChooser.setAcceptAllFileFilterUsed(false);
-            FileNameExtensionFilter palFilter = new FileNameExtensionFilter("Palette files (*.pal)", "pal");
-            palFileChooser.addChoosableFileFilter(palFilter);
+            try {
+                DatFileHandler datFileHandler = new DatFileHandler(selectedDatFile);
+                java.util.List<com.gamemode.tkviewer.Frame> sprites = datFileHandler.extractSprites();
+                Map<String, PalFileHandler> extractedPalettes = datFileHandler.getExtractedPalettes();
 
-            int palResult = palFileChooser.showOpenDialog(this);
-            if (palResult == JFileChooser.APPROVE_OPTION) {
-                File selectedPalFile = palFileChooser.getSelectedFile();
-
-                try {
-                    DatFileHandler datFileHandler = new DatFileHandler(selectedDatFile);
-                    java.util.List<com.gamemode.tkviewer.Frame> sprites = datFileHandler.extractSprites(); // Use java.util.List explicitly
-
-                    if (sprites.isEmpty()) {
-                        JOptionPane.showMessageDialog(this,
-                                "No sprites (EPF files) found in the selected DAT file.",
-                                "No Sprites Found", JOptionPane.INFORMATION_MESSAGE);
-                        return;
-                    }
-
-                    PalFileHandler palFileHandler = new PalFileHandler(selectedPalFile);
-
-                    // Create and show the sprite viewer frame
-                    String frameTitle = "Sprites from " + selectedDatFile.getName() + " (using " + selectedPalFile.getName() + ")";
-                    new SpriteViewerFrame(frameTitle, sprites, palFileHandler);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (sprites.isEmpty() && extractedPalettes.isEmpty()) {
                     JOptionPane.showMessageDialog(this,
-                            "Error loading DAT or PAL file: " + e.getMessage(),
-                            "File Load Error", JOptionPane.ERROR_MESSAGE);
+                            "No sprites (EPF files) or PAL files found in the selected DAT file.",
+                            "No Content Found", JOptionPane.INFORMATION_MESSAGE);
+                    return;
                 }
+                
+                // If sprites are empty but palettes are present, could offer a palette viewer later.
+                // For now, focus on sprites.
+                if (sprites.isEmpty() && !extractedPalettes.isEmpty()) {
+                     JOptionPane.showMessageDialog(this,
+                            "No sprites (EPF files) found. Palettes were found but sprite viewer needs sprites.",
+                            "No Sprites Found", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+
+
+                // Create and show the sprite viewer frame
+                // SpriteViewerFrame will now handle palette selection from the extractedPalettes map
+                String frameTitle = "Sprites from " + selectedDatFile.getName();
+                if (extractedPalettes.isEmpty()) {
+                    frameTitle += " (no palettes found in DAT)";
+                } else {
+                    frameTitle += " (using palettes from DAT)";
+                }
+                new SpriteViewerFrame(frameTitle, sprites, extractedPalettes);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                        "Error loading DAT file: " + e.getMessage(),
+                        "File Load Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
