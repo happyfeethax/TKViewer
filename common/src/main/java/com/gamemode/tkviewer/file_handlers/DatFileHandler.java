@@ -5,8 +5,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+
+// Assuming com.gamemode.tkviewer.Frame will be resolved during compilation
+// If not, this will need adjustment.
+import com.gamemode.tkviewer.Frame;
+import com.gamemode.tkviewer.resources.Sprite; // Keep for now, might use later
 
 public class DatFileHandler extends FileHandler {
     boolean isBaram;
@@ -147,11 +154,47 @@ public class DatFileHandler extends FileHandler {
             }
         }
 
+        // Original code had an empty if block here, which is unusual.
+        // Preserving it for now, but it might be a point of review.
         if (caseInsensitive) {
 
         }
 
         return null;
+    }
+
+    /**
+     * Extracts sprite data from embedded EPF files within this DAT archive.
+     * Each frame within an EPF file is treated as a separate sprite.
+     *
+     * @return A list of Frame objects, where each Frame represents a sprite.
+     *         Returns an empty list if no EPF files are found or if they contain no frames.
+     */
+    public List<Frame> extractSprites() {
+        List<Frame> sprites = new ArrayList<>();
+        for (Map.Entry<String, ByteBuffer> entry : this.files.entrySet()) {
+            String fileName = entry.getKey();
+            if (fileName.toLowerCase().endsWith(".epf")) {
+                ByteBuffer epfData = entry.getValue().duplicate(); // Use duplicate to avoid altering original buffer state
+                
+                // The EpfFileHandler constructor expects the buffer to be at the beginning.
+                epfData.rewind();
+
+                EpfFileHandler epfHandler = new EpfFileHandler(epfData, fileName, false); // false for loadAllFrames initially
+                epfHandler.loadAllFrames(); // Load all frames to populate frameCount and frame data
+
+                for (int i = 0; i < epfHandler.frameCount; i++) {
+                    Frame frame = epfHandler.getFrame(i);
+                    if (frame != null) {
+                        // Optionally, we could convert/wrap 'frame' into a 'Sprite' object here
+                        // if the 'Sprite' class offers a more suitable interface for the caller.
+                        // For now, returning the Frame object directly as it contains necessary data.
+                        sprites.add(frame);
+                    }
+                }
+            }
+        }
+        return sprites;
     }
 
     private int lengthUntilZero() {

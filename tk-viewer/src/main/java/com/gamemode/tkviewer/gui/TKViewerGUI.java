@@ -1,10 +1,9 @@
 package com.gamemode.tkviewer.gui;
 
-import com.gamemode.tkviewer.file_handlers.CmpFileHandler;
-import com.gamemode.tkviewer.file_handlers.MapFileHandler;
-import com.gamemode.tkviewer.file_handlers.MnmFileHandler;
+import com.gamemode.tkviewer.Frame;
+import com.gamemode.tkviewer.file_handlers.*;
 import com.gamemode.tkviewer.render.*;
-import com.gamemode.tkviewer.render.Renderer;
+import com.gamemode.tkviewer.render.Renderer; // Already present
 import com.gamemode.tkviewer.resources.Resources;
 import com.gamemode.tkviewer.utilities.FileUtils;
 import com.gamemode.tkviewer.utilities.RenderUtils;
@@ -27,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List; // Import java.util.List
 
 public class TKViewerGUI extends JFrame implements ActionListener {
 
@@ -37,6 +37,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
     JMenu fileMenu = new JMenu("File");
     JMenu openMenu = new JMenu("Open");
     JMenuItem openMapMenuItem = new JMenuItem("Map File (*.cmp | *.map)");
+    JMenuItem openDatSpritesMenuItem = new JMenuItem("DAT File (Sprites) (*.dat)");
     JMenuItem exitMenuItem = new JMenuItem("Exit");
 
     JMenu editMenu = new JMenu("Edit");
@@ -121,6 +122,10 @@ public class TKViewerGUI extends JFrame implements ActionListener {
         // File > Open > Map File
         openMapMenuItem.addActionListener(this);
         openMenu.add(openMapMenuItem);
+
+        // File > Open > DAT File (Sprites)
+        openDatSpritesMenuItem.addActionListener(this);
+        openMenu.add(openDatSpritesMenuItem);
 
         // File > Exit
         exitMenuItem.addActionListener(this);
@@ -600,11 +605,14 @@ public class TKViewerGUI extends JFrame implements ActionListener {
             if (result == JFileChooser.APPROVE_OPTION) {
                 this.openMap(fileChooser.getSelectedFile());
             }
+        } else if (ae.getSource() == this.openDatSpritesMenuItem) {
+            handleOpenDatSprites();
         } else if (ae.getSource() == this.editClearCacheMenuItem) {
-            Frame[] frames = JFrame.getFrames();
+            // Ensure Frame[] below refers to java.awt.Frame, not com.gamemode.tkviewer.Frame
+            java.awt.Frame[] frames = JFrame.getFrames();
 
             for (int i = 0; i < frames.length; i++) {
-                Frame frame = frames[i];
+                java.awt.Frame frame = frames[i];
                 if (!(frame instanceof TKViewerGUI) && frame.isDisplayable()) {
                     JOptionPane.showMessageDialog(this, "Please close all other TKViewer windows to clear TKViewer cache.", "Cannot clear TKViewer cache", JOptionPane.WARNING_MESSAGE);
                     return;
@@ -771,6 +779,69 @@ public class TKViewerGUI extends JFrame implements ActionListener {
             new ViewFrame("World Maps", "World Map", "World Maps", this.worldMapRenderers);
         } else if (ae.getSource() == this.exitMenuItem) {
             System.exit(0);
+        }
+    }
+
+    private void handleOpenDatSprites() {
+        JFileChooser datFileChooser = new JFileChooser();
+        datFileChooser.setDialogTitle("Select a DAT file");
+        Path nexusDataPath = Paths.get(System.getProperty("user.home"), "Documents", "NexusTK"); // A common base path
+        if (nexusDataPath.toFile().exists()) {
+            datFileChooser.setCurrentDirectory(nexusDataPath.toFile());
+        } else {
+            datFileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+        }
+        datFileChooser.setAcceptAllFileFilterUsed(false);
+        FileNameExtensionFilter datFilter = new FileNameExtensionFilter("DAT files (*.dat)", "dat");
+        datFileChooser.addChoosableFileFilter(datFilter);
+
+        int datResult = datFileChooser.showOpenDialog(this);
+        if (datResult == JFileChooser.APPROVE_OPTION) {
+            File selectedDatFile = datFileChooser.getSelectedFile();
+
+            JFileChooser palFileChooser = new JFileChooser();
+            palFileChooser.setDialogTitle("Select a Palette file (*.pal)");
+            // Try to set initial directory to where DAT was, or a common assets/palette directory
+            File datFileParentDir = selectedDatFile.getParentFile();
+            if (datFileParentDir != null && datFileParentDir.exists()) {
+                palFileChooser.setCurrentDirectory(datFileParentDir);
+            } else if (nexusDataPath.toFile().exists()) {
+                palFileChooser.setCurrentDirectory(nexusDataPath.toFile());
+            } else {
+                palFileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+            }
+            palFileChooser.setAcceptAllFileFilterUsed(false);
+            FileNameExtensionFilter palFilter = new FileNameExtensionFilter("Palette files (*.pal)", "pal");
+            palFileChooser.addChoosableFileFilter(palFilter);
+
+            int palResult = palFileChooser.showOpenDialog(this);
+            if (palResult == JFileChooser.APPROVE_OPTION) {
+                File selectedPalFile = palFileChooser.getSelectedFile();
+
+                try {
+                    DatFileHandler datFileHandler = new DatFileHandler(selectedDatFile);
+                    java.util.List<com.gamemode.tkviewer.Frame> sprites = datFileHandler.extractSprites(); // Use java.util.List explicitly
+
+                    if (sprites.isEmpty()) {
+                        JOptionPane.showMessageDialog(this,
+                                "No sprites (EPF files) found in the selected DAT file.",
+                                "No Sprites Found", JOptionPane.INFORMATION_MESSAGE);
+                        return;
+                    }
+
+                    PalFileHandler palFileHandler = new PalFileHandler(selectedPalFile);
+
+                    // Create and show the sprite viewer frame
+                    String frameTitle = "Sprites from " + selectedDatFile.getName() + " (using " + selectedPalFile.getName() + ")";
+                    new SpriteViewerFrame(frameTitle, sprites, palFileHandler);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this,
+                            "Error loading DAT or PAL file: " + e.getMessage(),
+                            "File Load Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         }
     }
 
