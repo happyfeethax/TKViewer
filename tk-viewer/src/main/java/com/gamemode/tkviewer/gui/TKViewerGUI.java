@@ -39,6 +39,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
     JMenu openMenu = new JMenu("Open");
     JMenuItem openMapMenuItem = new JMenuItem("Map File (*.cmp | *.map)");
     JMenuItem openDatSpritesMenuItem = new JMenuItem("DAT File (Sprites) (*.dat)");
+    JMenuItem openEpfPalMenuItem = new JMenuItem("EPF+PAL Diagnostic (*.epf)");
     JMenuItem exitMenuItem = new JMenuItem("Exit");
 
     JMenu editMenu = new JMenu("Edit");
@@ -127,6 +128,10 @@ public class TKViewerGUI extends JFrame implements ActionListener {
         // File > Open > DAT File (Sprites)
         openDatSpritesMenuItem.addActionListener(this);
         openMenu.add(openDatSpritesMenuItem);
+
+        // File > Open > EPF+PAL Diagnostic
+        openEpfPalMenuItem.addActionListener(this);
+        openMenu.add(openEpfPalMenuItem);
 
         // File > Exit
         exitMenuItem.addActionListener(this);
@@ -608,6 +613,8 @@ public class TKViewerGUI extends JFrame implements ActionListener {
             }
         } else if (ae.getSource() == this.openDatSpritesMenuItem) {
             handleOpenDatSprites();
+        } else if (ae.getSource() == this.openEpfPalMenuItem) {
+            handleOpenEpfPalDiagnostic();
         } else if (ae.getSource() == this.editClearCacheMenuItem) {
             // Ensure Frame[] below refers to java.awt.Frame, not com.gamemode.tkviewer.Frame
             java.awt.Frame[] frames = JFrame.getFrames();
@@ -780,6 +787,75 @@ public class TKViewerGUI extends JFrame implements ActionListener {
             new ViewFrame("World Maps", "World Map", "World Maps", this.worldMapRenderers);
         } else if (ae.getSource() == this.exitMenuItem) {
             System.exit(0);
+        }
+    }
+
+    private void handleOpenEpfPalDiagnostic() {
+        JFileChooser epfFileChooser = new JFileChooser();
+        epfFileChooser.setDialogTitle("Select an EPF file");
+        // Suggest last used path or user's documents/NexusTK path
+        Path nexusDataPath = Paths.get(System.getProperty("user.home"), "Documents", "NexusTK");
+        if (nexusDataPath.toFile().exists()) {
+            epfFileChooser.setCurrentDirectory(nexusDataPath.toFile());
+        } else {
+            epfFileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+        }
+        epfFileChooser.setAcceptAllFileFilterUsed(false);
+        FileNameExtensionFilter epfFilter = new FileNameExtensionFilter("EPF files (*.epf)", "epf");
+        epfFileChooser.addChoosableFileFilter(epfFilter);
+
+        int epfResult = epfFileChooser.showOpenDialog(this);
+        if (epfResult == JFileChooser.APPROVE_OPTION) {
+            File selectedEpfFile = epfFileChooser.getSelectedFile();
+
+            JFileChooser palFileChooser = new JFileChooser();
+            palFileChooser.setDialogTitle("Select a PAL file for " + selectedEpfFile.getName());
+            File epfParentDir = selectedEpfFile.getParentFile();
+            if (epfParentDir != null && epfParentDir.exists()) {
+                palFileChooser.setCurrentDirectory(epfParentDir);
+            } else {
+                palFileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+            }
+            palFileChooser.setAcceptAllFileFilterUsed(false);
+            FileNameExtensionFilter palFilter = new FileNameExtensionFilter("Palette files (*.pal)", "pal");
+            palFileChooser.addChoosableFileFilter(palFilter);
+
+            int palResult = palFileChooser.showOpenDialog(this);
+            if (palResult == JFileChooser.APPROVE_OPTION) {
+                File selectedPalFile = palFileChooser.getSelectedFile();
+
+                try {
+                    // Load EPF with all frames
+                    EpfFileHandler epfHandler = new EpfFileHandler(selectedEpfFile, true); // true to loadAllFrames
+                    java.util.List<com.gamemode.tkviewer.Frame> sprites = new ArrayList<>();
+                    for (int i = 0; i < epfHandler.frameCount; i++) {
+                        com.gamemode.tkviewer.Frame frame = epfHandler.getFrame(i);
+                        if (frame != null) {
+                            sprites.add(frame);
+                        }
+                    }
+
+                    if (sprites.isEmpty()) {
+                        JOptionPane.showMessageDialog(this,
+                                "No frames found in the selected EPF file: " + selectedEpfFile.getName(),
+                                "No Frames Found", JOptionPane.INFORMATION_MESSAGE);
+                        return;
+                    }
+
+                    PalFileHandler palFileHandler = new PalFileHandler(selectedPalFile);
+                    Map<String, PalFileHandler> selectedPaletteMap = new java.util.HashMap<>();
+                    selectedPaletteMap.put(selectedPalFile.getName(), palFileHandler);
+
+                    String frameTitle = "Diagnostic: " + selectedEpfFile.getName() + " with " + selectedPalFile.getName();
+                    new SpriteViewerFrame(frameTitle, sprites, selectedPaletteMap);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this,
+                            "Error loading EPF or PAL file: " + e.getMessage(),
+                            "File Load Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         }
     }
 
