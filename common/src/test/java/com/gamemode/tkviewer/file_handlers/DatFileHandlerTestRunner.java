@@ -11,6 +11,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map; // Added import for Map
 import java.nio.file.Files;
 
 // Not using JUnit due to classpath issues in the environment.
@@ -38,6 +39,11 @@ public class DatFileHandlerTestRunner {
     private static void assertTrue(String message, boolean condition) {
         if (condition) return;
         throw new AssertionError(message + " - Condition was false");
+    }
+
+    private static void assertFalse(String message, boolean condition) {
+        if (!condition) return;
+        throw new AssertionError(message + " - Condition was true");
     }
 
     // Helper to create minimal EPF file data as a byte array

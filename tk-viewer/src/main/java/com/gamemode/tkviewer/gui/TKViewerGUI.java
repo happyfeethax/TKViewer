@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List; // Import java.util.List
+import java.util.Map;  // Added import for java.util.Map
 
 public class TKViewerGUI extends JFrame implements ActionListener {
 
