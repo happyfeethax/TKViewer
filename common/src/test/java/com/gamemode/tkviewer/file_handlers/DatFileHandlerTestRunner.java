@@ -236,7 +236,7 @@ public class DatFileHandlerTestRunner {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException { // Added "throws IOException"
         try {
             // Setup temporary folder
             tempFolder = Files.createTempDirectory("datHandlerTests").toFile();
