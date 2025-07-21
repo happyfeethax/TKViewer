@@ -68,6 +68,13 @@ public class PalFileHandler extends FileHandler {
         this.close();
     }
 
+    public PalFileHandler(boolean dummy) {
+        super((ByteBuffer) null);
+        this.paletteCount = 1;
+        palettes = new ArrayList<Palette>();
+        palettes.add(new Palette());
+    }
+
     @Override
     public ByteBuffer toByteBuffer() {
         int byteBufferSize = HEADER_SIZE;

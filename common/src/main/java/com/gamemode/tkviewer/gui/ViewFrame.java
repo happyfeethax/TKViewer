@@ -39,6 +39,7 @@ public class ViewFrame extends JFrame implements ActionListener {
     Integer itemCount;
 
     JButton exportButton;
+    JButton exportAllButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
 
@@ -137,6 +138,10 @@ public class ViewFrame extends JFrame implements ActionListener {
         exportButton = new JButton("Export Frames");
         exportButton.addActionListener(this);
 
+        exportAllButton = new JButton("Export All Frames");
+        exportAllButton.addActionListener(this);
+        exportAllButton.setVisible(false);
+
         framesButton = new JRadioButton("Frames");
         animationsButton = new JRadioButton("Animations");
         animationsButton.setSelected(true);
@@ -149,9 +154,16 @@ public class ViewFrame extends JFrame implements ActionListener {
         animationsButton.addActionListener(this);
 
         statusPanel.add(exportButton);
+        statusPanel.add(exportAllButton);
 
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
+
+        if (useEpfCount) {
+            animationsButton.setEnabled(false);
+            framesButton.setSelected(true);
+            exportAllButton.setVisible(true);
+        }
 
         this.add(scroller, BorderLayout.WEST);
         this.add(imagePanel, BorderLayout.CENTER);
@@ -388,6 +400,26 @@ public class ViewFrame extends JFrame implements ActionListener {
         }
     }
 
+    public void exportAllFrames() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setDialogTitle("Choose export directory");
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            for (int i = 0; i < renderers.size(); i++) {
+                for (int j = 0; j < renderers.get(i).getCount(true); j++) {
+                    Image[] images = renderers.get(i).getFrames(j);
+                    for (int k = 0; k < images.length; k++) {
+                        final int frameIndex = renderers.get(i).getFrameIndex(j, k);
+                        FileUtils.writeBufferedImageToFile(((BufferedImage) images[k]), Paths.get(fileChooser.getSelectedFile().toString(), singular + "-" + j + "-" + frameIndex + ".png").toString());
+                    }
+                }
+            }
+
+            JOptionPane.showMessageDialog(this, "All frames exported successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent ae) {
         int listIndex = list.getSelectedIndex();
@@ -407,6 +439,8 @@ public class ViewFrame extends JFrame implements ActionListener {
             }
         } else if (ae.getSource() == this.exportButton) {
             this.exportFrames(listIndex);
+        } else if (ae.getSource() == this.exportAllButton) {
+            this.exportAllFrames();
         }
     }
 }

@@ -32,6 +32,12 @@ public class DscFileHandler extends FileHandler {
         init(isBaram);
     }
 
+    public DscFileHandler(List<Part> parts) {
+        super((ByteBuffer) null);
+        this.parts = parts;
+        this.partCount = parts.size();
+    }
+
     public void init(boolean isBaram) {
         // Seek past header
         this.seek(DscFileHandler.HEADER, true);

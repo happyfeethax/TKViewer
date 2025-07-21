@@ -54,6 +54,12 @@ public class DatFileHandler extends FileHandler {
         this.close();
     }
 
+    public DatFileHandler(Map<String, ByteBuffer> files) {
+        super((ByteBuffer) null);
+        this.files = files;
+        this.fileCount = files.size();
+    }
+
     public void writeDatFile(Path outputPath) {
         FileWriter fileOutputStream;
         fileOutputStream = new FileWriter(outputPath);

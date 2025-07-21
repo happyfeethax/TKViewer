@@ -1,6 +1,7 @@
 package com.gamemode.tkviewer;
 
 import com.gamemode.tkviewer.file_handlers.DatFileHandler;
+import com.gamemode.tkviewer.file_handlers.EpfFileHandler;
 import com.gamemode.tkviewer.render.PartRenderer;
 import com.gamemode.tkviewer.resources.Resources;
 
@@ -15,65 +16,87 @@ import java.io.IOException;
  */
 public class TKDumper {
 
-    private static final String NTK_FRAMES_OUTPUT_DIR = "E:\\Reversing\\NTK\\frames_ntk";
-    private static final String BARAM_FRAMES_OUTPUT_DIR = "E:\\Reversing\\NTK\\frames_baram";
-    private static final String NTK_DAT_OUTPUT_DIR = "E:\\Reversing\\NTK\\dat_files_ntk";
-    private static final String BARAM_DAT_OUTPUT_DIR = "E:\\Reversing\\NTK\\dat_files_baram";
+    private static final String NTK_FRAMES_OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "frames_ntk";
+    private static final String BARAM_FRAMES_OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "frames_baram";
+    private static final String NTK_DAT_OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "dat_files_ntk";
+    private static final String BARAM_DAT_OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "dat_files_baram";
+    private static final String EPF_DAT_OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "epf_dat_files";
 
     public static void main(String[] args) {
+        (new File(EPF_DAT_OUTPUT_DIR)).mkdirs();
         (new File(NTK_FRAMES_OUTPUT_DIR)).mkdirs();
         (new File(BARAM_FRAMES_OUTPUT_DIR)).mkdirs();
         (new File(NTK_DAT_OUTPUT_DIR)).mkdirs();
         (new File(BARAM_DAT_OUTPUT_DIR)).mkdirs();
+        (new File(Resources.BARAM_DATA_DIRECTORY)).mkdirs();
 
-        String ntkDataDirectory = Resources.getNtkDataDirectory();
-        extractDats(ntkDataDirectory, NTK_DAT_OUTPUT_DIR, false);
-        extractDats(Resources.BARAM_DATA_DIRECTORY, BARAM_DAT_OUTPUT_DIR, true);
+        // String ntkDataDirectory = Resources.getNtkDataDirectory();
+        // extractDats(ntkDataDirectory, NTK_DAT_OUTPUT_DIR, false);
+        // extractDats(Resources.BARAM_DATA_DIRECTORY, BARAM_DAT_OUTPUT_DIR, true);
 
-        System.out.println("===============BEGIN TK RENDERING===========");
-        dumpAllImages(new PartRenderer("Sword", ntkDataDirectory), "Sword", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Spear", ntkDataDirectory), "Spear", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Body", ntkDataDirectory), "Body", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Fan", ntkDataDirectory), "Fan", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Shield", ntkDataDirectory), "Shield", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Bow", ntkDataDirectory), "Bow", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Coat", ntkDataDirectory), "Coat", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Face", ntkDataDirectory), "Face", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Hair", ntkDataDirectory), "Hair", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Mantle", ntkDataDirectory), "Mantle", NTK_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Shoes", ntkDataDirectory), "Shoes", NTK_FRAMES_OUTPUT_DIR);
-        System.out.println("===============END TK RENDERING===========");
+        // System.out.println("===============BEGIN TK RENDERING===========");
+        // dumpAllImages(new PartRenderer("Sword", ntkDataDirectory), "Sword", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Spear", ntkDataDirectory), "Spear", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Body", ntkDataDirectory), "Body", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Fan", ntkDataDirectory), "Fan", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Shield", ntkDataDirectory), "Shield", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Bow", ntkDataDirectory), "Bow", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Coat", ntkDataDirectory), "Coat", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Face", ntkDataDirectory), "Face", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Hair", ntkDataDirectory), "Hair", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Mantle", ntkDataDirectory), "Mantle", NTK_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Shoes", ntkDataDirectory), "Shoes", NTK_FRAMES_OUTPUT_DIR);
+        // System.out.println("===============END TK RENDERING===========");
 
-        System.out.println("===============BEGIN BARAM RENDERING===========");
-        dumpAllImages(new PartRenderer("C_Body", Resources.BARAM_DATA_DIRECTORY), "C_Body", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("C_Spear", Resources.BARAM_DATA_DIRECTORY), "C_Spear", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("C_Sword", Resources.BARAM_DATA_DIRECTORY), "C_Sword", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("C_Riding", Resources.BARAM_DATA_DIRECTORY), "C_Riding", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("C_Shield", Resources.BARAM_DATA_DIRECTORY), "C_Shield", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("C_Fan", Resources.BARAM_DATA_DIRECTORY), "C_Fan", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("H_Body", Resources.BARAM_DATA_DIRECTORY), "H_Body", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Body", Resources.BARAM_DATA_DIRECTORY), "Body", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Bow", Resources.BARAM_DATA_DIRECTORY), "Bow", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("BowF", Resources.BARAM_DATA_DIRECTORY), "BowF", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Coat", Resources.BARAM_DATA_DIRECTORY), "Coat", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Face", Resources.BARAM_DATA_DIRECTORY), "Face", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Fan", Resources.BARAM_DATA_DIRECTORY), "Fan", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Hair", Resources.BARAM_DATA_DIRECTORY), "Hair", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("HairB", Resources.BARAM_DATA_DIRECTORY), "HairB", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Mantle", Resources.BARAM_DATA_DIRECTORY), "Mantle", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("MantleF", Resources.BARAM_DATA_DIRECTORY), "MantleF", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("MantleB", Resources.BARAM_DATA_DIRECTORY), "MantleB", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Shield", Resources.BARAM_DATA_DIRECTORY), "Shield", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Shoes", Resources.BARAM_DATA_DIRECTORY), "Shoes", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("ShoesB", Resources.BARAM_DATA_DIRECTORY), "ShoesB", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("ShoesF", Resources.BARAM_DATA_DIRECTORY), "ShoesF", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Spear", Resources.BARAM_DATA_DIRECTORY), "Spear", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("Sword", Resources.BARAM_DATA_DIRECTORY), "Sword", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("SwordF", Resources.BARAM_DATA_DIRECTORY), "SwordF", BARAM_FRAMES_OUTPUT_DIR);
-        dumpAllImages(new PartRenderer("SwordB", Resources.BARAM_DATA_DIRECTORY), "SwordB", BARAM_FRAMES_OUTPUT_DIR);
-        System.out.println("===============END BARAM RENDERING===========");
+        // System.out.println("===============BEGIN BARAM RENDERING===========");
+        // dumpAllImages(new PartRenderer("C_Body", Resources.BARAM_DATA_DIRECTORY), "C_Body", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("C_Spear", Resources.BARAM_DATA_DIRECTORY), "C_Spear", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("C_Sword", Resources.BARAM_DATA_DIRECTORY), "C_Sword", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("C_Riding", Resources.BARAM_DATA_DIRECTORY), "C_Riding", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("C_Shield", Resources.BARAM_DATA_DIRECTORY), "C_Shield", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("C_Fan", Resources.BARAM_DATA_DIRECTORY), "C_Fan", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("H_Body", Resources.BARAM_DATA_DIRECTORY), "H_Body", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Body", Resources.BARAM_DATA_DIRECTORY), "Body", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Bow", Resources.BARAM_DATA_DIRECTORY), "Bow", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("BowF", Resources.BARAM_DATA_DIRECTORY), "BowF", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Coat", Resources.BARAM_DATA_DIRECTORY), "Coat", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Face", Resources.BARAM_DATA_DIRECTORY), "Face", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Fan", Resources.BARAM_DATA_DIRECTORY), "Fan", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Hair", Resources.BARAM_DATA_DIRECTORY), "Hair", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("HairB", Resources.BARAM_DATA_DIRECTORY), "HairB", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Mantle", Resources.BARAM_DATA_DIRECTORY), "Mantle", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("MantleF", Resources.BARAM_DATA_DIRECTORY), "MantleF", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("MantleB", Resources.BARAM_DATA_DIRECTORY), "MantleB", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Shield", Resources.BARAM_DATA_DIRECTORY), "Shield", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Shoes", Resources.BARAM_DATA_DIRECTORY), "Shoes", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("ShoesB", Resources.BARAM_DATA_DIRECTORY), "ShoesB", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("ShoesF", Resources.BARAM_DATA_DIRECTORY), "ShoesF", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Spear", Resources.BARAM_DATA_DIRECTORY), "Spear", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("Sword", Resources.BARAM_DATA_DIRECTORY), "Sword", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("SwordF", Resources.BARAM_DATA_DIRECTORY), "SwordF", BARAM_FRAMES_OUTPUT_DIR);
+        // dumpAllImages(new PartRenderer("SwordB", Resources.BARAM_DATA_DIRECTORY), "SwordB", BARAM_FRAMES_OUTPUT_DIR);
+        // System.out.println("===============END BARAM RENDERING===========");
 
+        // System.out.println("===============BEGIN EPF->DAT RENDERING===========");
+        // File dataDirectoryFile = new File("testdata");
+        // File[] epfFiles = dataDirectoryFile.listFiles((dir, name) -> name.endsWith(".epf"));
+        // for (File epfFile : epfFiles) {
+        //     dumpEpfToDat(new EpfFileHandler(epfFile), EPF_DAT_OUTPUT_DIR);
+        // }
+        // System.out.println("===============END EPF->DAT RENDERING===========");
     }
+
+    // private static void dumpEpfToDat(EpfFileHandler epfFileHandler, String outputDirectoryString) {
+    //     File outputDirectory = new File(outputDirectoryString);
+    //     if (!outputDirectory.exists() && outputDirectory.mkdirs()) {
+    //         System.err.println("Unable to create output directory: " + outputDirectoryString);
+    //     }
+    //
+    //     String datFileName = epfFileHandler.file.getName().replace(".epf", ".dat");
+    //     File outputFile = new File(outputDirectory + File.separator + datFileName);
+    //     PartRenderer renderer = new PartRenderer(epfFileHandler);
+    //     EpfExporter.exportEpfToDat(epfFileHandler, renderer, outputFile.toPath());
+    // }
 
     private static void extractDats(String dataDirectory, String dumpDirectory, boolean isBaram) {
         File dataDirectoryFile = new File(dataDirectory);

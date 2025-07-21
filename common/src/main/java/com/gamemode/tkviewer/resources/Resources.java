@@ -70,7 +70,12 @@ public class Resources {
     public static final String NTK_DATA_DIRECTORY = PROGRAM_FILES_X86 + File.separator + "KRU" + File.separator + "NexusTK" + File.separator + "Data";
     public static final String NTK_LINUX_DATA_DIRECTORY = System.getProperty("user.home") + File.separator + "NexusTK" + File.separator + "Data";
     public static String getNtkDataDirectory() {
-        return System.getProperty("os.name").contains("Windows") ? Resources.NTK_DATA_DIRECTORY : Resources.NTK_LINUX_DATA_DIRECTORY;
+        String dataDirectory = System.getProperty("os.name").contains("Windows") ? Resources.NTK_DATA_DIRECTORY : Resources.NTK_LINUX_DATA_DIRECTORY;
+        File dataDirectoryFile = new File(dataDirectory);
+        if (!dataDirectoryFile.exists()) {
+            dataDirectoryFile.mkdirs();
+        }
+        return dataDirectory;
     }
     public static final String BARAM_DATA_DIRECTORY = C + File.separator + "Nexon\\Kingdom of the Winds\\Data";
     public static final String NTK_MAP_DIRECTORY = System.getProperty("user.home") + File.separator + "Documents" + File.separator +  "NexusTK"  + File.separator + "Maps";

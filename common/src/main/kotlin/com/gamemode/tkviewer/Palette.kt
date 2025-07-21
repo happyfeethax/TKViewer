@@ -7,6 +7,12 @@ class Palette(var animationColorCount: Int, animationColorOffsets: List<Int>, co
     var animationColorOffsets: MutableList<Int>
     var colors: MutableList<Color>
 
+    constructor() : this(0, ArrayList<Int>(), ArrayList<Color>(), PaletteMetadata("DLPalette", java.nio.ByteBuffer.allocate(15), java.nio.ByteBuffer.allocate(7))) {
+        for (i in 0..255) {
+            this.colors.add(Color(i, i, i, 255))
+        }
+    }
+
     val redBytes: ByteArray
         get() {
             val redBytes = ByteArray(colors.size)

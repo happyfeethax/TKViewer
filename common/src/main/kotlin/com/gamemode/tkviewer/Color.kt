@@ -10,4 +10,11 @@ class Color(var rgba: Long) {
     val alpha: Long? = rgba and 0x000000FF
 
     init { this.rgba = java.lang.Long.rotateRight(rgba, 8) }
+
+    constructor(r: Int, g: Int, b: Int, a: Int) : this(
+        ((r.toLong() and 0xFF) shl 24) or
+                ((g.toLong() and 0xFF) shl 16) or
+                ((b.toLong() and 0xFF) shl 8) or
+                (a.toLong() and 0xFF)
+    )
 }
