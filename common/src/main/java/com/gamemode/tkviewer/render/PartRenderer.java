@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.List;
 
 
-public class PartRenderer implements Renderer {
+public class PartRenderer implements TKRenderer {
 
     public static int ALPHA = 0x0;
 

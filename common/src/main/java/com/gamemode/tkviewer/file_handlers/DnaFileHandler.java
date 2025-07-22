@@ -67,7 +67,7 @@ public class DnaFileHandler extends FileHandler {
 
     public void save(File file) {
         this.recalculateFileSize();
-        this.toFile(file);
+        new FileWriter(file, true).write(this.toByteBuffer().array());
     }
 
     public void recalculateFileSize() {

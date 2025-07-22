@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TileRenderer implements Renderer {
+public class TileRenderer implements TKRenderer {
 
     public static int ALPHA = 0x0;
 

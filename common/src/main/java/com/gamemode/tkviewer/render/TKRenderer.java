@@ -2,7 +2,7 @@ package com.gamemode.tkviewer.render;
 
 import java.awt.*;
 
-public interface Renderer {
+public interface TKRenderer {
     int getCount();
     int getCount(boolean useEpfCount);
     Image[] getFrames(int index);

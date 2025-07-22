@@ -1,7 +1,14 @@
 package com.gamemode.tkviewer.gui;
 
-import com.gamemode.tkviewer.*;
-import com.gamemode.tkviewer.render.*;
+import com.gamemode.tkviewer.EffectImage;
+import com.gamemode.tkviewer.Mob;
+import com.gamemode.tkviewer.MobChunk;
+import com.gamemode.tkviewer.Part;
+import com.gamemode.tkviewer.render.EffectRenderer;
+import com.gamemode.tkviewer.render.MobRenderer;
+import com.gamemode.tkviewer.render.PartRenderer;
+import com.gamemode.tkviewer.render.TKRenderer;
+import com.gamemode.tkviewer.render.TileRenderer;
 import com.gamemode.tkviewer.resources.Resources;
 import com.gamemode.tkviewer.utilities.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -26,7 +33,7 @@ import java.util.List;
 
 public class ViewFrame extends JFrame implements ActionListener {
 
-    List<Renderer> renderers;
+    List<TKRenderer> renderers;
     String singular;
     String plural;
 
@@ -82,7 +89,7 @@ public class ViewFrame extends JFrame implements ActionListener {
 
     public ViewFrame(String title, String singular, String plural, ArrayList<TileRenderer> tileRenderers) {
         this(title, singular, plural);
-        this.renderers = new ArrayList<Renderer>();
+        this.renderers = new ArrayList<TKRenderer>();
         this.renderers.addAll(tileRenderers);
         this.configure(false);
     }
@@ -100,7 +107,7 @@ public class ViewFrame extends JFrame implements ActionListener {
         imagePanel.setPreferredSize(new Dimension(600, 520));
 
         itemCount = 0;
-        for (Renderer renderer : this.renderers) {
+        for (TKRenderer renderer : this.renderers) {
             itemCount += renderer.getCount(useEpfCount);
         }
         String[] items = new String[itemCount];

@@ -4,7 +4,7 @@ import com.gamemode.tkviewer.file_handlers.CmpFileHandler;
 import com.gamemode.tkviewer.file_handlers.MapFileHandler;
 import com.gamemode.tkviewer.file_handlers.MnmFileHandler;
 import com.gamemode.tkviewer.render.*;
-import com.gamemode.tkviewer.render.Renderer;
+import com.gamemode.tkviewer.render.TKRenderer;
 import com.gamemode.tkviewer.resources.Resources;
 import com.gamemode.tkviewer.utilities.FileUtils;
 import com.gamemode.tkviewer.utilities.RenderUtils;
@@ -828,7 +828,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
             swordRenderer.dispose();
         }
         if (worldMapRenderers != null) {
-            for (Renderer renderer : worldMapRenderers) {
+            for (TKRenderer renderer : worldMapRenderers) {
                 renderer.dispose();
             }
         }

@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class EffectRenderer implements Renderer {
+public class EffectRenderer implements TKRenderer {
 
     public static int ALPHA = 0x0;
 

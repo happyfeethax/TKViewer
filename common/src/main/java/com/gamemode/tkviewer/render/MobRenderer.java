@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MobRenderer implements Renderer {
+public class MobRenderer implements TKRenderer {
 
     public static int ALPHA = 0x0;
 
@@ -270,12 +270,12 @@ public class MobRenderer implements Renderer {
         stringBuilder.append("<html>");
         stringBuilder.append("Frame Info:<br>");
         stringBuilder.append("  Left: " + frame.getLeft() + "<br>");
-        string_builder.append("  Top: " + frame.getTop() + "<br>");
-        string_builder.append("  Right: " + frame.getRight() + "<br>");
-        string_builder.append("  Bottom: " + frame.getBottom() + "<br>");
-        string_builder.append("</html>");
+        stringBuilder.append("  Top: " + frame.getTop() + "<br>");
+        stringBuilder.append("  Right: " + frame.getRight() + "<br>");
+        stringBuilder.append("  Bottom: " + frame.getBottom() + "<br>");
+        stringBuilder.append("</html>");
 
-        return string_builder.toString();
+        return stringBuilder.toString();
     }
 
     public DatFileHandler getDatFile() {
