@@ -1,10 +1,7 @@
 package com.gamemode.tkviewer.gui;
 
-import com.gamemode.tkviewer.EffectImage;
-import com.gamemode.tkviewer.Mob;
-import com.gamemode.tkviewer.Part;
+import com.gamemode.tkviewer.*;
 import com.gamemode.tkviewer.render.*;
-import com.gamemode.tkviewer.render.Renderer;
 import com.gamemode.tkviewer.resources.Resources;
 import com.gamemode.tkviewer.utilities.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -41,6 +38,11 @@ public class ViewFrame extends JFrame implements ActionListener {
     JButton exportButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
+
+    JButton copyAnimationButton;
+    JButton pasteAnimationButton;
+
+    public static MobChunk copiedChunk = null;
 
     public ViewFrame(String title, String singular, String plural) {
         // Configure Frame
@@ -150,6 +152,16 @@ public class ViewFrame extends JFrame implements ActionListener {
 
         statusPanel.add(exportButton);
 
+        if (this.renderers.get(0) instanceof MobRenderer) {
+            copyAnimationButton = new JButton("Copy Animation");
+            copyAnimationButton.addActionListener(this);
+            statusPanel.add(copyAnimationButton);
+
+            pasteAnimationButton = new JButton("Paste Animation");
+            pasteAnimationButton.addActionListener(this);
+            statusPanel.add(pasteAnimationButton);
+        }
+
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
 
@@ -176,6 +188,39 @@ public class ViewFrame extends JFrame implements ActionListener {
         JMenu imageFileMenu = new JMenu("File");
         imageFileMenu.add(closeMenuItem);
         imageMenuBar.add(imageFileMenu);
+
+        if (this.renderers.get(0) instanceof MobRenderer) {
+            MobRenderer mobRenderer = (MobRenderer) this.renderers.get(0);
+            // File > Save
+            JMenuItem saveMenuItem = new JMenuItem("Save As...");
+            saveMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JFileChooser fileChooser = new JFileChooser();
+                    fileChooser.setDialogTitle("Save DNA File");
+                    int result = fileChooser.showSaveDialog(ViewFrame.this);
+                    if (result == JFileChooser.APPROVE_OPTION) {
+                        File file = fileChooser.getSelectedFile();
+                        mobRenderer.mobDna.save(file);
+                        JOptionPane.showMessageDialog(ViewFrame.this, "DNA file saved successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            });
+            imageFileMenu.add(saveMenuItem);
+
+            // File > Save to Dat
+            JMenuItem saveToDatMenuItem = new JMenuItem("Save to Dat");
+            saveToDatMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    mobRenderer.mobDna.recalculateFileSize();
+                    mobRenderer.getDatFile().replaceFile("monster.dna", mobRenderer.mobDna.toByteBuffer());
+                    mobRenderer.getDatFile().save();
+                    JOptionPane.showMessageDialog(ViewFrame.this, "mon.dat saved successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
+                }
+            });
+            imageFileMenu.add(saveToDatMenuItem);
+        }
     }
 
     private void clearImagePanel() {
@@ -278,6 +323,25 @@ public class ViewFrame extends JFrame implements ActionListener {
                 Icon gifIcon = new ImageIcon(gifPath);
                 JLabel jLabel = new JLabel(gifIcon);
                 jLabel.setToolTipText(String.valueOf(i));
+                final int chunkIndex = i;
+                jLabel.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        super.mouseClicked(e);
+                        if (SwingUtilities.isRightMouseButton(e)) {
+                            // Change to Paste
+                            if (copiedChunk != null) {
+                                Mob mob = ((MobRenderer) renderers.get(rendererIndex)).mobDna.mobs.get(index);
+                                mob.getChunks().set(chunkIndex, copiedChunk);
+                                renderMobAnimations(index, rendererIndex);
+                            }
+                        } else {
+                            // Change to Copy
+                            Mob mob = ((MobRenderer) renderers.get(rendererIndex)).mobDna.mobs.get(index);
+                            copiedChunk = mob.getChunks().get(chunkIndex);
+                        }
+                    }
+                });
                 imagePanel.add(jLabel);
             } else {
                 System.err.println("Couldn't find file: " + gifPath);
@@ -407,6 +471,10 @@ public class ViewFrame extends JFrame implements ActionListener {
             }
         } else if (ae.getSource() == this.exportButton) {
             this.exportFrames(listIndex);
+        } else if (ae.getSource() == this.copyAnimationButton) {
+            // Not implemented
+        } else if (ae.getSource() == this.pasteAnimationButton) {
+            // Not implemented
         }
     }
 }

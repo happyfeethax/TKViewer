@@ -48,8 +48,10 @@ public class MobRenderer implements Renderer {
     public DnaFileHandler mobDna;
     public int manualPaletteIndex = 0;
 
+    DatFileHandler monDat;
+
     public MobRenderer() {
-        DatFileHandler monDat = new DatFileHandler(Resources.getNtkDataDirectory() + File.separator + "mon.dat");
+        monDat = new DatFileHandler(Resources.getNtkDataDirectory() + File.separator + "mon.dat");
 
         mobs = new HashMap<Integer, BufferedImage>();
 
@@ -268,12 +270,16 @@ public class MobRenderer implements Renderer {
         stringBuilder.append("<html>");
         stringBuilder.append("Frame Info:<br>");
         stringBuilder.append("  Left: " + frame.getLeft() + "<br>");
-        stringBuilder.append("  Top: " + frame.getTop() + "<br>");
-        stringBuilder.append("  Right: " + frame.getRight() + "<br>");
-        stringBuilder.append("  Bottom: " + frame.getBottom() + "<br>");
-        stringBuilder.append("</html>");
+        string_builder.append("  Top: " + frame.getTop() + "<br>");
+        string_builder.append("  Right: " + frame.getRight() + "<br>");
+        string_builder.append("  Bottom: " + frame.getBottom() + "<br>");
+        string_builder.append("</html>");
 
-        return stringBuilder.toString();
+        return string_builder.toString();
+    }
+
+    public DatFileHandler getDatFile() {
+        return this.monDat;
     }
 
     @Override

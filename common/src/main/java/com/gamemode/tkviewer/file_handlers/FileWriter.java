@@ -11,10 +11,22 @@ public class FileWriter {
     RandomAccessFile fileHandle;
 
     public FileWriter(Path filePath) {
-        this(filePath.toFile());
+        this(filePath.toFile(), false);
+    }
+
+    public FileWriter(Path filePath, boolean overwrite) {
+        this(filePath.toFile(), overwrite);
     }
 
     public FileWriter(File file) {
+        this(file, false);
+    }
+
+    public FileWriter(File file, boolean overwrite) {
+        if (overwrite && file.exists()) {
+            file.delete();
+        }
+
         try {
             this.fileHandle = new RandomAccessFile(file, "rw");
         } catch (FileNotFoundException fnfe) {

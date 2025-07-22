@@ -54,9 +54,17 @@ public class DatFileHandler extends FileHandler {
         this.close();
     }
 
+    public void save() {
+        writeDatFile(new File(this.filePath).toPath(), true);
+    }
+
     public void writeDatFile(Path outputPath) {
+        writeDatFile(outputPath, false);
+    }
+
+    public void writeDatFile(Path outputPath, boolean overwrite) {
         FileWriter fileOutputStream;
-        fileOutputStream = new FileWriter(outputPath);
+        fileOutputStream = new FileWriter(outputPath, overwrite);
 
         // Write File Count ( + 1 )
         fileOutputStream.writeInt(Math.toIntExact(this.fileCount + 1), false);
@@ -152,6 +160,22 @@ public class DatFileHandler extends FileHandler {
         }
 
         return null;
+    }
+
+    public void replaceFile(String key, ByteBuffer newFile) {
+        this.replaceFile(key, newFile, true);
+    }
+
+    public void replaceFile(String key, ByteBuffer newFile, boolean caseInsensitive) {
+        for (Map.Entry<String, ByteBuffer> entry : this.files.entrySet()) {
+            if (caseInsensitive && entry.getKey().toLowerCase().equals(key.toLowerCase())) {
+                entry.setValue(newFile);
+                return;
+            } else if (!caseInsensitive && entry.getKey().equals(key)) {
+                entry.setValue(newFile);
+                return;
+            }
+        }
     }
 
     private int lengthUntilZero() {

@@ -65,6 +65,24 @@ public class DnaFileHandler extends FileHandler {
         this.close();
     }
 
+    public void save(File file) {
+        this.recalculateFileSize();
+        this.toFile(file);
+    }
+
+    public void recalculateFileSize() {
+        int fileSize = 4;
+        for (Mob mob : this.mobs) {
+            fileSize += 8;
+            for (MobChunk chunk : mob.getChunks()) {
+                fileSize += 2;
+                fileSize += (chunk.getBlocks().size() * 9);
+            }
+        }
+
+        this.fileSize = fileSize;
+    }
+
     @Override
     public ByteBuffer toByteBuffer() {
         ByteBuffer byteBuffer = ByteBuffer.allocate(fileSize);
