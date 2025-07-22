@@ -140,7 +140,7 @@ public class ViewFrame extends JFrame implements ActionListener {
 
         exportAllButton = new JButton("Export All Frames");
         exportAllButton.addActionListener(this);
-        exportAllButton.setVisible(false);
+        exportAllButton.setVisible(true);
 
         framesButton = new JRadioButton("Frames");
         animationsButton = new JRadioButton("Animations");
@@ -159,11 +159,6 @@ public class ViewFrame extends JFrame implements ActionListener {
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
 
-        if (useEpfCount) {
-            animationsButton.setEnabled(false);
-            framesButton.setSelected(true);
-            exportAllButton.setVisible(true);
-        }
 
         this.add(scroller, BorderLayout.WEST);
         this.add(imagePanel, BorderLayout.CENTER);
