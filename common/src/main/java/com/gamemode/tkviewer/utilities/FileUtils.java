@@ -88,6 +88,38 @@ public class FileUtils {
         }
     }
 
+    public static void exportWebMFromImages(List<EffectImage> images, Path outputFilePath) {
+        try {
+            // Create a temporary directory to store the frames
+            Path tempDir = Files.createTempDirectory("tkviewer-webm-frames");
+
+            // Write each frame to a file
+            for (int i = 0; i < images.size(); i++) {
+                File frameFile = new File(tempDir.toFile(), String.format("frame-%03d.png", i));
+                ImageIO.write(images.get(i).getImage(), "png", frameFile);
+            }
+
+            // Use ffmpeg to create the WebM file
+            ProcessBuilder pb = new ProcessBuilder(
+                    "ffmpeg",
+                    "-i", tempDir.resolve("frame-%03d.png").toString(),
+                    "-c:v", "libvpx-vp9",
+                    "-b:v", "0",
+                    "-crf", "30",
+                    "-pix_fmt", "yuv420p",
+                    outputFilePath.toString()
+            );
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            process.waitFor();
+
+            // Clean up the temporary directory
+            deleteDirectory(tempDir.toString());
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static File[] getEpfs(String dataDirectory, String prefix) {
         File[] files = new File(dataDirectory).listFiles(new FilenameFilter() {
             @Override

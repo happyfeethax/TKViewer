@@ -40,6 +40,7 @@ public class ViewFrame extends JFrame implements ActionListener {
 
     JButton exportButton;
     JButton exportAllButton;
+    JButton exportToWebMButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
 
@@ -142,6 +143,10 @@ public class ViewFrame extends JFrame implements ActionListener {
         exportAllButton.addActionListener(this);
         exportAllButton.setVisible(true);
 
+        exportToWebMButton = new JButton("Export to WebM");
+        exportToWebMButton.addActionListener(this);
+        exportToWebMButton.setVisible(false);
+
         framesButton = new JRadioButton("Frames");
         animationsButton = new JRadioButton("Animations");
         animationsButton.setSelected(true);
@@ -155,6 +160,7 @@ public class ViewFrame extends JFrame implements ActionListener {
 
         statusPanel.add(exportButton);
         statusPanel.add(exportAllButton);
+        statusPanel.add(exportToWebMButton);
 
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
@@ -402,16 +408,35 @@ public class ViewFrame extends JFrame implements ActionListener {
         int result = fileChooser.showSaveDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             for (int i = 0; i < renderers.size(); i++) {
-                for (int j = 0; j < renderers.get(i).getCount(true); j++) {
-                    Image[] images = renderers.get(i).getFrames(j);
-                    for (int k = 0; k < images.length; k++) {
-                        final int frameIndex = renderers.get(i).getFrameIndex(j, k);
-                        FileUtils.writeBufferedImageToFile(((BufferedImage) images[k]), Paths.get(fileChooser.getSelectedFile().toString(), singular + "-" + j + "-" + frameIndex + ".png").toString());
+                if (renderers.get(i) instanceof EffectRenderer) {
+                    EffectRenderer renderer = (EffectRenderer) renderers.get(i);
+                    for (int j = 0; j < renderer.getCount(true); j++) {
+                        Image[] images = renderer.getFrames(j);
+                        for (int k = 0; k < images.length; k++) {
+                            final int frameIndex = renderer.getFrameIndex(j, k);
+                            FileUtils.writeBufferedImageToFile(((BufferedImage) images[k]), Paths.get(fileChooser.getSelectedFile().toString(), singular + "-" + j + "-" + frameIndex + ".png").toString());
+                        }
                     }
                 }
             }
 
             JOptionPane.showMessageDialog(this, "All frames exported successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    public void exportToWebM(int index) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Choose WebM file save location");
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            List<EffectImage> images = new ArrayList<>();
+            if (renderers.get(0) instanceof EffectRenderer) {
+                images = ((EffectRenderer) renderers.get(0)).renderEffect(index);
+            } else if (renderers.get(0) instanceof PartRenderer) {
+                images = ((PartRenderer) renderers.get(0)).renderAnimation(index, 0);
+            }
+            FileUtils.exportWebMFromImages(images, fileChooser.getSelectedFile().toPath());
+            JOptionPane.showMessageDialog(this, "WebM file exported successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -426,16 +451,21 @@ public class ViewFrame extends JFrame implements ActionListener {
 
         if (ae.getSource() == this.framesButton) {
             this.renderFrames(listIndex);
+            exportToWebMButton.setVisible(false);
         } else if (ae.getSource() == this.animationsButton) {
             if (renderers.get(0) instanceof EffectRenderer) {
                 this.renderEffectAnimations(listIndex);
+                exportToWebMButton.setVisible(true);
             } else if (renderers.get(0) instanceof PartRenderer) {
                 this.renderPartAnimations(listIndex);
+                exportToWebMButton.setVisible(true);
             }
         } else if (ae.getSource() == this.exportButton) {
             this.exportFrames(listIndex);
         } else if (ae.getSource() == this.exportAllButton) {
             this.exportAllFrames();
+        } else if (ae.getSource() == this.exportToWebMButton) {
+            this.exportToWebM(list.getSelectedIndex());
         }
     }
 }
