@@ -74,6 +74,9 @@ public class FileUtils {
     }
 
     public static void exportGifFromImages(List<EffectImage> images, String outputFilePath) {
+        if (images.isEmpty()) {
+            return;
+        }
         try {
             ImageOutputStream output = new FileImageOutputStream(new File(outputFilePath));
             GifSequenceWriter gifWriter = new GifSequenceWriter(output, BufferedImage.TYPE_INT_ARGB, images.get(0).getDelay(), true);
@@ -89,6 +92,9 @@ public class FileUtils {
     }
 
     public static void exportWebMFromImages(List<EffectImage> images, Path outputFilePath) {
+        if (images.isEmpty()) {
+            return;
+        }
         try {
             // Create a temporary directory to store the frames
             Path tempDir = Files.createTempDirectory("tkviewer-webm-frames");
