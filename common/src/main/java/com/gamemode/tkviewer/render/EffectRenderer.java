@@ -59,7 +59,6 @@ public class EffectRenderer implements Renderer {
             if (frame == null) {
                 continue;
             }
-//            if (frame)
             if (frame.getLeft() < l) {
                 l = frame.getLeft();
             }

@@ -41,6 +41,7 @@ public class ViewFrame extends JFrame implements ActionListener {
     JButton exportButton;
     JButton exportAllButton;
     JButton exportToWebMButton;
+    JButton exportAllAnimationsButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
 
@@ -147,6 +148,10 @@ public class ViewFrame extends JFrame implements ActionListener {
         exportToWebMButton.addActionListener(this);
         exportToWebMButton.setVisible(false);
 
+        exportAllAnimationsButton = new JButton("Export All Animations");
+        exportAllAnimationsButton.addActionListener(this);
+        exportAllAnimationsButton.setVisible(false);
+
         framesButton = new JRadioButton("Frames");
         animationsButton = new JRadioButton("Animations");
         animationsButton.setSelected(true);
@@ -161,6 +166,7 @@ public class ViewFrame extends JFrame implements ActionListener {
         statusPanel.add(exportButton);
         statusPanel.add(exportAllButton);
         statusPanel.add(exportToWebMButton);
+        statusPanel.add(exportAllAnimationsButton);
 
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
@@ -440,6 +446,36 @@ public class ViewFrame extends JFrame implements ActionListener {
         }
     }
 
+    public void exportAllAnimations() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setDialogTitle("Choose export directory");
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            for (int i = 0; i < renderers.size(); i++) {
+                if (renderers.get(i) instanceof EffectRenderer) {
+                    EffectRenderer renderer = (EffectRenderer) renderers.get(i);
+                    for (int j = 0; j < renderer.getCount(true); j++) {
+                        List<EffectImage> images = renderer.renderEffect(j);
+                        FileUtils.exportGifFromImages(images, Paths.get(fileChooser.getSelectedFile().toString(), singular + "-" + j + ".gif").toString());
+                    }
+                } else if (renderers.get(i) instanceof PartRenderer) {
+                    PartRenderer renderer = (PartRenderer) renderers.get(i);
+                    for (int j = 0; j < renderer.getCount(true); j++) {
+                        for (int k = 0; k < renderer.partDsc.parts.get(j).getChunks().size(); k++) {
+                            List<EffectImage> images = renderer.renderAnimation(j, k);
+                            if (images.size() > 0) {
+                                FileUtils.exportGifFromImages(images, Paths.get(fileChooser.getSelectedFile().toString(), singular + "-" + j + "-" + k + ".gif").toString());
+                            }
+                        }
+                    }
+                }
+            }
+
+            JOptionPane.showMessageDialog(this, "All animations exported successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent ae) {
         int listIndex = list.getSelectedIndex();
@@ -452,13 +488,16 @@ public class ViewFrame extends JFrame implements ActionListener {
         if (ae.getSource() == this.framesButton) {
             this.renderFrames(listIndex);
             exportToWebMButton.setVisible(false);
+            exportAllAnimationsButton.setVisible(false);
         } else if (ae.getSource() == this.animationsButton) {
             if (renderers.get(0) instanceof EffectRenderer) {
                 this.renderEffectAnimations(listIndex);
                 exportToWebMButton.setVisible(true);
+                exportAllAnimationsButton.setVisible(true);
             } else if (renderers.get(0) instanceof PartRenderer) {
                 this.renderPartAnimations(listIndex);
                 exportToWebMButton.setVisible(true);
+                exportAllAnimationsButton.setVisible(true);
             }
         } else if (ae.getSource() == this.exportButton) {
             this.exportFrames(listIndex);
@@ -466,6 +505,8 @@ public class ViewFrame extends JFrame implements ActionListener {
             this.exportAllFrames();
         } else if (ae.getSource() == this.exportToWebMButton) {
             this.exportToWebM(list.getSelectedIndex());
+        } else if (ae.getSource() == this.exportAllAnimationsButton) {
+            this.exportAllAnimations();
         }
     }
 }
