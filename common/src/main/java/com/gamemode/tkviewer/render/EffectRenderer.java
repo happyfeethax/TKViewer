@@ -46,6 +46,9 @@ public class EffectRenderer implements Renderer {
     }
 
     public List<EffectImage> renderEffect(int effectIndex) {
+        if (effectIndex < 0 || effectIndex >= this.effectEfxTbl.effectCount) {
+            return new ArrayList<>();
+        }
         // Determine Frame Range for Effect
         List<EffectFrame> effectFrames = this.effectEfxTbl.effects.get(effectIndex).getEffectFrames();
         int effectFrameCount = effectFrames.size();
@@ -88,13 +91,18 @@ public class EffectRenderer implements Renderer {
                 continue;
             }
 
-            graphicsObject.drawImage(
-                    tile,
-                    null,
-                    (frame.getLeft() - l),
-                    (frame.getTop() - t));
+            try {
+                graphicsObject.drawImage(
+                        tile,
+                        null,
+                        (frame.getLeft() - l),
+                        (frame.getTop() - t));
 
-            images.add(new EffectImage(frameImage, effectFrame.getFrameDelay(), null, null));
+                images.add(new EffectImage(frameImage, effectFrame.getFrameDelay(), null, null));
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println("Error rendering effect " + effectIndex + ", frame " + i);
+                e.printStackTrace();
+            }
         }
 
         return images;
