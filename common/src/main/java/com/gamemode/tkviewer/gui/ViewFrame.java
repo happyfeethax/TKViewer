@@ -14,10 +14,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Paths;
@@ -27,7 +24,7 @@ import java.util.List;
 
 //import javax.swing.*;
 
-public class ViewFrame extends JFrame implements ActionListener {
+public class ViewFrame extends JFrame implements ActionListener, KeyListener {
 
     List<Renderer> renderers;
     String singular;
@@ -215,6 +212,8 @@ public class ViewFrame extends JFrame implements ActionListener {
         JMenu imageFileMenu = new JMenu("File");
         imageFileMenu.add(closeMenuItem);
         imageMenuBar.add(imageFileMenu);
+
+        this.addKeyListener(this);
     }
 
     private void clearImagePanel() {
@@ -507,6 +506,33 @@ public class ViewFrame extends JFrame implements ActionListener {
 
             JOptionPane.showMessageDialog(this, "All animations exported successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            int newIndex = paletteComboBox.getSelectedIndex() - 1;
+            if (newIndex < 0) {
+                newIndex = paletteComboBox.getItemCount() - 1;
+            }
+            paletteComboBox.setSelectedIndex(newIndex);
+        } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+            int newIndex = paletteComboBox.getSelectedIndex() + 1;
+            if (newIndex >= paletteComboBox.getItemCount()) {
+                newIndex = 0;
+            }
+            paletteComboBox.setSelectedIndex(newIndex);
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        // Do nothing
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        // Do nothing
     }
 
     @Override

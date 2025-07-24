@@ -165,57 +165,57 @@ public class PartRenderer implements Renderer {
                 break;
 
             case FACES:
-                epfPrefix = "Bow";
-                palName = "Bow.pal";
+                epfPrefix = "Face";
+                palName = "Face.pal";
                 dscName = "Face.dsc";
                 break;
 
             case FANS:
-                epfPrefix = "Bow";
-                palName = "Bow.pal";
-                dscName = "Bow.dsc";
+                epfPrefix = "Fan";
+                palName = "Fan.pal";
+                dscName = "Fan.dsc";
                 break;
 
             case HAIR:
-                epfPrefix = "Bow";
-                palName = "Bow.pal";
-                dscName = "Bow.dsc";
+                epfPrefix = "Hair";
+                palName = "Hair.pal";
+                dscName = "Hair.dsc";
                 break;
 
             case HELMETS:
-                epfPrefix = "Bow";
-                palName = "Bow.pal";
-                dscName = "Bow.dsc";
+                epfPrefix = "Helmet";
+                palName = "Helmet.pal";
+                dscName = "Helmet.dsc";
                 break;
 
             case MANTLES:
-                epfPrefix = "Bow";
-                palName = "Bow.pal";
-                dscName = "Bow.dsc";
+                epfPrefix = "Mantle";
+                palName = "Mantle.pal";
+                dscName = "Mantle.dsc";
                 break;
 
             case SPEARS:
-                epfPrefix = "Bow";
-                palName = "Bow.pal";
-                dscName = "Bow.dsc";
+                epfPrefix = "Spear";
+                palName = "Spear.pal";
+                dscName = "Spear.dsc";
                 break;
 
             case SHOES:
-                epfPrefix = "Bow";
-                palName = "Bow.pal";
-                dscName = "Bow.dsc";
+                epfPrefix = "Shoes";
+                palName = "Shoes.pal";
+                dscName = "Shoes.dsc";
                 break;
 
             case SHIELDS:
-                epfPrefix = "Bow";
-                palName = "Bow.pal";
-                dscName = "Bow.dsc";
+                epfPrefix = "Shield";
+                palName = "Shield.pal";
+                dscName = "Shield.dsc";
                 break;
 
             case SWORDS:
-                epfPrefix = "Bow";
-                palName = "Bow.pal";
-                dscName = "Bow.dsc";
+                epfPrefix = "Sword";
+                palName = "Sword.pal";
+                dscName = "Sword.dsc";
                 break;
         }
         this.partEpfs = FileUtils.createEpfsFromFiles(FileUtils.getEpfs(tkDataDirectory, Objects.requireNonNull(epfPrefix)));
