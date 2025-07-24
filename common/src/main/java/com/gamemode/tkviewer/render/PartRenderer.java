@@ -268,6 +268,12 @@ public class PartRenderer implements Renderer {
     }
 
     public BufferedImage renderPart(int partIndex, int frameIndex, int frameOffset, int paletteIndex) {
+        // Clear cache if palette has changed
+        if (this.manualPaletteIndex != paletteIndex) {
+            this.parts.clear();
+            this.manualPaletteIndex = paletteIndex;
+        }
+
         // Return Part if cached.
         if (parts.containsKey(frameIndex + frameOffset)) {
             return parts.get(frameIndex + frameOffset);

@@ -75,6 +75,12 @@ public class MobRenderer implements Renderer {
     }
 
     public BufferedImage renderMob(int tileIndex, int paletteIndex) {
+        // Clear cache if palette has changed
+        if (this.manualPaletteIndex != paletteIndex) {
+            this.mobs.clear();
+            this.manualPaletteIndex = paletteIndex;
+        }
+
         int epfIndex = 0;
 
         int frameCount = 0;
