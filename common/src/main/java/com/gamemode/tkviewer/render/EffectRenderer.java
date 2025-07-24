@@ -178,6 +178,11 @@ public class EffectRenderer implements Renderer {
 
     @Override
     public Image[] getFrames(int index) {
+        return getFrames(index, 0);
+    }
+
+    @Override
+    public Image[] getFrames(int index, int paletteIndex) {
         List<EffectImage> effects = this.renderEffect(index);
         Image[] frames = new Image[effects.size()];
         for (int i = 0; i < frames.length; i++) {

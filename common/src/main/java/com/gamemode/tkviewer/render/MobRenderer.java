@@ -172,6 +172,10 @@ public class MobRenderer implements Renderer {
     }
 
     public List<EffectImage> renderAnimation(int mobIndex, int chunkIndex) {
+        return renderAnimation(mobIndex, chunkIndex, -1);
+    }
+
+    public List<EffectImage> renderAnimation(int mobIndex, int chunkIndex, int paletteIndex) {
         Mob mob = this.mobDna.mobs.get(mobIndex);
         MobChunk chunk = mob.getChunks().get(chunkIndex);
 
@@ -193,7 +197,10 @@ public class MobRenderer implements Renderer {
             MobBlock block = chunk.getBlocks().get(i);
             int frameIndex = (int)(mob.getFrameIndex() + block.getFrameOffset());
 
-            BufferedImage tile = this.renderMob(frameIndex, mob.getPaletteId());
+            if (paletteIndex == -1) {
+                paletteIndex = mob.getPaletteId();
+            }
+            BufferedImage tile = this.renderMob(frameIndex, paletteIndex);
             Frame frame = FileUtils.getFrameFromEpfs(frameIndex, mobEpfs);
             if (frame == null) {
                 continue;
@@ -234,6 +241,11 @@ public class MobRenderer implements Renderer {
 
     @Override
     public Image[] getFrames(int index) {
+        return getFrames(index, this.mobDna.mobs.get(index).getPaletteId());
+    }
+
+    @Override
+    public Image[] getFrames(int index, int paletteIndex) {
         Mob mob = this.mobDna.mobs.get(index);
         int frameIndex = (int)mob.getFrameIndex();
         int maxFrameOffset = 0;
@@ -248,7 +260,7 @@ public class MobRenderer implements Renderer {
         int imageCount = maxFrameOffset + 1;
         Image[] frames = new Image[imageCount];
         for (int i = 0; i < imageCount; i++) {
-            frames[i] = this.renderMob(frameIndex + i, mob.getPaletteId());
+            frames[i] = this.renderMob(frameIndex + i, paletteIndex);
         }
 
         return frames;

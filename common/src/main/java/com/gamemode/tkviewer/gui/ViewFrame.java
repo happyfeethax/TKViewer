@@ -44,6 +44,7 @@ public class ViewFrame extends JFrame implements ActionListener {
     JButton exportAllAnimationsButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
+    JComboBox<String> paletteComboBox;
 
     public ViewFrame(String title, String singular, String plural) {
         // Configure Frame
@@ -156,6 +157,10 @@ public class ViewFrame extends JFrame implements ActionListener {
         animationsButton = new JRadioButton("Animations");
         animationsButton.setSelected(true);
 
+        paletteComboBox = new JComboBox<String>();
+        paletteComboBox.addActionListener(this);
+        paletteComboBox.setVisible(false);
+
         ButtonGroup group = new ButtonGroup();
         group.add(framesButton);
         group.add(animationsButton);
@@ -167,6 +172,7 @@ public class ViewFrame extends JFrame implements ActionListener {
         statusPanel.add(exportAllButton);
         statusPanel.add(exportToWebMButton);
         statusPanel.add(exportAllAnimationsButton);
+        statusPanel.add(paletteComboBox);
 
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
@@ -175,6 +181,20 @@ public class ViewFrame extends JFrame implements ActionListener {
         this.add(scroller, BorderLayout.WEST);
         this.add(imagePanel, BorderLayout.CENTER);
         this.add(statusPanel, BorderLayout.SOUTH);
+
+        if (renderers.get(0) instanceof PartRenderer) {
+            PartRenderer renderer = (PartRenderer) renderers.get(0);
+            for (int i = 0; i < renderer.partPal.paletteCount; i++) {
+                paletteComboBox.addItem("Palette " + i);
+            }
+            paletteComboBox.setVisible(true);
+        } else if (renderers.get(0) instanceof MobRenderer) {
+            MobRenderer renderer = (MobRenderer) renderers.get(0);
+            for (int i = 0; i < renderer.mobPal.paletteCount; i++) {
+                paletteComboBox.addItem("Palette " + i);
+            }
+            paletteComboBox.setVisible(true);
+        }
 
         this.setVisible(true);
 
@@ -278,11 +298,15 @@ public class ViewFrame extends JFrame implements ActionListener {
         }
 
         MobRenderer mobRenderer = ((MobRenderer) renderers.get(rendererIndex));
+        int paletteIndex = paletteComboBox.getSelectedIndex();
+        if (paletteIndex == -1) {
+            paletteIndex = 0;
+        }
 
         List<String> gifPaths = new ArrayList<String>();
         Mob mob = mobRenderer.mobDna.mobs.get(index);
         for (int i = 0; i < mob.getChunks().size(); i++) {
-            List<EffectImage> chunkImages = mobRenderer.renderAnimation(index, i);
+            List<EffectImage> chunkImages = mobRenderer.renderAnimation(index, i, paletteIndex);
             if (chunkImages.size() != 0) {
                 String gifPath = outputDirectory + File.separator + singular + "-" + index + "-" + i + "-" + rendererIndex + ".gif";
                 FileUtils.exportGifFromImages(chunkImages, gifPath);
@@ -320,11 +344,15 @@ public class ViewFrame extends JFrame implements ActionListener {
         }
 
         PartRenderer partRenderer = ((PartRenderer) renderers.get(rendererIndex));
+        int paletteIndex = paletteComboBox.getSelectedIndex();
+        if (paletteIndex == -1) {
+            paletteIndex = 0;
+        }
 
         List<String> gifPaths = new ArrayList<String>();
         Part part = partRenderer.partDsc.parts.get(index);
         for (int i = 0; i < part.getChunks().size(); i++) {
-            List<EffectImage> chunkImages = partRenderer.renderAnimation(index, i);
+            List<EffectImage> chunkImages = partRenderer.renderAnimation(index, i, paletteIndex);
             if (chunkImages.size() != 0) {
                 String gifPath = outputDirectory + File.separator + singular + "-" + index + "-" + i + "-" + rendererIndex + ".gif";
                 FileUtils.exportGifFromImages(chunkImages, gifPath);
@@ -355,7 +383,12 @@ public class ViewFrame extends JFrame implements ActionListener {
     public void renderFrames(int index, int rendererIndex) {
         clearImagePanel();
 
-        Image[] images = renderers.get(rendererIndex).getFrames(index);
+        int paletteIndex = paletteComboBox.getSelectedIndex();
+        if (paletteIndex == -1) {
+            paletteIndex = 0;
+        }
+
+        Image[] images = renderers.get(rendererIndex).getFrames(index, paletteIndex);
         for (int i = 0; i < images.length; i++) {
             final int frameIndex = renderers.get(rendererIndex).getFrameIndex(index, i);
             JLabel jLabel = new JLabel(new ImageIcon(images[i]));
@@ -507,6 +540,19 @@ public class ViewFrame extends JFrame implements ActionListener {
             this.exportToWebM(list.getSelectedIndex());
         } else if (ae.getSource() == this.exportAllAnimationsButton) {
             this.exportAllAnimations();
+        } else if (ae.getSource() == this.paletteComboBox) {
+            int selectedIndex = list.getSelectedIndex();
+            if (selectedIndex != -1) {
+                if (animationsButton.isSelected()) {
+                    if (renderers.get(0) instanceof MobRenderer) {
+                        renderMobAnimations(selectedIndex);
+                    } else if (renderers.get(0) instanceof PartRenderer) {
+                        renderPartAnimations(selectedIndex);
+                    }
+                } else {
+                    renderFrames(selectedIndex);
+                }
+            }
         }
     }
 }

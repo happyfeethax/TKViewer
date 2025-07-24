@@ -432,12 +432,17 @@ public class PartRenderer implements Renderer {
 
     @Override
     public Image[] getFrames(int index) {
+        return getFrames(index, (int) this.partDsc.parts.get(index).getPaletteId());
+    }
+
+    @Override
+    public Image[] getFrames(int index, int paletteIndex) {
         Image[] frames = new Image[(int) this.partDsc.parts.get(index).getFrameCount()];
         for (int i = 0; i < this.partDsc.parts.get(index).getFrameCount(); i++) {
             frames[i] = this.renderPart(index,
                     (int) this.partDsc.parts.get(index).getFrameIndex(),
                     i,
-                    (int) this.partDsc.parts.get(index).getPaletteId());
+                    paletteIndex);
         }
 
         return frames;

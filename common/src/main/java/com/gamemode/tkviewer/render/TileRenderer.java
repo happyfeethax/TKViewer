@@ -81,10 +81,14 @@ public class TileRenderer implements Renderer {
     }
 
     public BufferedImage renderTile(int tileIndex, int animationOffset) {
-        return this.renderTile(tileIndex, animationOffset, true);
+        return this.renderTile(tileIndex, animationOffset, true, -1);
     }
 
     public BufferedImage renderTile(int tileIndex, int animationOffset, boolean useCache) {
+        return this.renderTile(tileIndex, animationOffset, useCache, -1);
+    }
+
+    public BufferedImage renderTile(int tileIndex, int animationOffset, boolean useCache, int paletteIndex) {
         // Return Tile if cached.
         if (useCache && tiles.containsKey(tileIndex)) {
             return tiles.get(tileIndex);
@@ -119,11 +123,13 @@ public class TileRenderer implements Renderer {
             return image;
         }
         // Else
-        int paletteIndex = this.manualPaletteIndex;
-        if (this.isFrmHandled()) {
-            paletteIndex = this.tileFrm.paletteIndices.get(tileIndex);
-        } else if (this.tileTbl != null) {
-            paletteIndex = this.tileTbl.paletteIndices.get(tileIndex).getPaletteIndex();
+        if (paletteIndex == -1) {
+            paletteIndex = this.manualPaletteIndex;
+            if (this.isFrmHandled()) {
+                paletteIndex = this.tileFrm.paletteIndices.get(tileIndex);
+            } else if (this.tileTbl != null) {
+                paletteIndex = this.tileTbl.paletteIndices.get(tileIndex).getPaletteIndex();
+            }
         }
         if (paletteIndex > this.tilePal.paletteCount) {
             paletteIndex = 0;
@@ -200,8 +206,13 @@ public class TileRenderer implements Renderer {
 
     @Override
     public Image[] getFrames(int index) {
+        return getFrames(index, 0);
+    }
+
+    @Override
+    public Image[] getFrames(int index, int paletteIndex) {
         Image[] frames = new Image[1];
-        frames[0] = this.renderTile(index);
+        frames[0] = this.renderTile(index, paletteIndex);
 
         return frames;
     }
