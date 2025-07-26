@@ -307,7 +307,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
         }
     }
 
-    public void showLoadingDialog(String message, Resources.GUI_LOADING_FUNCTION loadingFunction) {
+    public void showLoadingDialog(String message, Resources.GUI_LOADING_FUNCTION loadingFunction, Runnable callback) {
         JDialog loadingNotification = new JDialog(this, "TKViewer", true);
         loadingNotification.setTitle("TKViewer");
         loadingNotification.setIconImage(this.clientIcon);
@@ -437,6 +437,9 @@ public class TKViewerGUI extends JFrame implements ActionListener {
             protected void done() {
                 loadingNotification.setVisible(false);
                 loadingNotification.dispose();
+                if (callback != null) {
+                    callback.run();
+                }
             }
         };
         loadingWorker.execute();
@@ -450,7 +453,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
     public void openMap(File mapFile) {
         // Initialize Map Data if needed
         if (this.mapRenderer == null) {
-            showLoadingDialog("Loading map resources, please wait...", Resources.GUI_LOADING_FUNCTION.MAPS);
+            showLoadingDialog("Loading map resources, please wait...", Resources.GUI_LOADING_FUNCTION.MAPS, null);
         }
 
         String fileExtension = FilenameUtils.getExtension(mapFile.getAbsolutePath());
@@ -611,7 +614,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
                 }
             }
 
-            showLoadingDialog("Clearing TKViewer cache, please wait...", Resources.GUI_LOADING_FUNCTION.CLEAR_CACHE);
+            showLoadingDialog("Clearing TKViewer cache, please wait...", Resources.GUI_LOADING_FUNCTION.CLEAR_CACHE, null);
         } else if (ae.getSource() == this.editBrowseCacheMenuItem) {
             if (!new File(Resources.TKVIEWER_DIRECTORY).exists()) {
                 new File(Resources.TKVIEWER_DIRECTORY).mkdirs();
@@ -625,150 +628,154 @@ public class TKViewerGUI extends JFrame implements ActionListener {
         } else if (ae.getSource() == this.viewBodyMenuItem) {
             // Initialize Body Data if needed
             if (this.bodyRenderer == null) {
-                showLoadingDialog("Loading body resources, please wait...", Resources.GUI_LOADING_FUNCTION.BODIES);
+                showLoadingDialog("Loading body resources, please wait...", Resources.GUI_LOADING_FUNCTION.BODIES, () -> new ViewFrame("Bodies", "Body", "Bodies", this.bodyRenderer));
+            } else {
+                new ViewFrame("Bodies", "Body", "Bodies", this.bodyRenderer);
             }
-
-            new ViewFrame("Bodies", "Body", "Bodies", this.bodyRenderer);
         } else if (ae.getSource() == this.viewBowMenuItem) {
             // Initialize Bow Data if needed
             if (this.bowRenderer == null) {
-                showLoadingDialog("Loading bow resources, please wait...", Resources.GUI_LOADING_FUNCTION.BOWS);
+                showLoadingDialog("Loading bow resources, please wait...", Resources.GUI_LOADING_FUNCTION.BOWS, () -> new ViewFrame("Bows", "Bow", "Bows", this.bowRenderer));
+            } else {
+                new ViewFrame("Bows", "Bow", "Bows", this.bowRenderer);
             }
-
-            new ViewFrame("Bows", "Bow", "Bows", this.bowRenderer);
         } else if (ae.getSource() == this.viewCoatMenuItem) {
             // Initialize Coat Data if needed
             if (this.coatRenderer == null) {
-                showLoadingDialog("Loading coat resources, please wait...", Resources.GUI_LOADING_FUNCTION.COATS);
+                showLoadingDialog("Loading coat resources, please wait...", Resources.GUI_LOADING_FUNCTION.COATS, () -> new ViewFrame("Coats", "Coat", "Coats", this.coatRenderer));
+            } else {
+                new ViewFrame("Coats", "Coat", "Coats", this.coatRenderer);
             }
-
-            new ViewFrame("Coats", "Coat", "Coats", this.coatRenderer);
         } else if (ae.getSource() == this.viewEffectMenuItem) {
             // Initialize Effect Data if needed
             if (this.effectRenderer == null) {
-                showLoadingDialog("Loading effect resources, please wait...", Resources.GUI_LOADING_FUNCTION.EFFECTS);
+                showLoadingDialog("Loading effect resources, please wait...", Resources.GUI_LOADING_FUNCTION.EFFECTS, () -> new ViewFrame("Effects", "Effect", "Effects", this.effectRenderer));
+            } else {
+                new ViewFrame("Effects", "Effect", "Effects", this.effectRenderer);
             }
-
-            new ViewFrame("Effects", "Effect", "Effects", this.effectRenderer);
         } else if (ae.getSource() == this.viewFaceMenuItem) {
             // Initialize Face Data if needed
             if (this.faceRenderer == null) {
-                showLoadingDialog("Loading face resources, please wait...", Resources.GUI_LOADING_FUNCTION.FACES);
+                showLoadingDialog("Loading face resources, please wait...", Resources.GUI_LOADING_FUNCTION.FACES, () -> new ViewFrame("Faces", "Face", "Faces", this.faceRenderer));
+            } else {
+                new ViewFrame("Faces", "Face", "Faces", this.faceRenderer);
             }
-
-            new ViewFrame("Faces", "Face", "Faces", this.faceRenderer);
         } else if (ae.getSource() == this.viewFaceDecMenuItem) {
             // Initialize Face Dec Data if needed
             if (this.faceDecRenderer == null) {
-                showLoadingDialog("Loading face decoration resources, please wait...", Resources.GUI_LOADING_FUNCTION.FACE_DEC);
+                showLoadingDialog("Loading face decoration resources, please wait...", Resources.GUI_LOADING_FUNCTION.FACE_DEC, () -> new ViewFrame("Face Decorations", "Face Decoration", "Face Decorations", this.faceDecRenderer));
+            } else {
+                new ViewFrame("Face Decorations", "Face Decoration", "Face Decorations", this.faceDecRenderer);
             }
-
-            new ViewFrame("Face Decorations", "Face Decoration", "Face Decorations", this.faceDecRenderer);
         } else if (ae.getSource() == this.viewFanMenuItem) {
             // Initialize Fan Data if needed
             if (this.fanRenderer == null) {
-                showLoadingDialog("Loading fan resources, please wait...", Resources.GUI_LOADING_FUNCTION.FANS);
+                showLoadingDialog("Loading fan resources, please wait...", Resources.GUI_LOADING_FUNCTION.FANS, () -> new ViewFrame("Fans", "Fan", "Fans", this.fanRenderer));
+            } else {
+                new ViewFrame("Fans", "Fan", "Fans", this.fanRenderer);
             }
-
-            new ViewFrame("Fans", "Fan", "Fans", this.fanRenderer);
         } else if (ae.getSource() == this.viewHairMenuItem) {
             // Initialize Hair Data if needed
             if (this.hairRenderer == null) {
-                showLoadingDialog("Loading hair resources, please wait...", Resources.GUI_LOADING_FUNCTION.HAIR);
+                showLoadingDialog("Loading hair resources, please wait...", Resources.GUI_LOADING_FUNCTION.HAIR, () -> new ViewFrame("Hair", "Hair", "Hair", this.hairRenderer));
+            } else {
+                new ViewFrame("Hair", "Hair", "Hair", this.hairRenderer);
             }
-
-            new ViewFrame("Hair", "Hair", "Hair", this.hairRenderer);
         } else if (ae.getSource() == this.viewHelmetMenuItem) {
             // Initialize Hair Data if needed
             if (this.helmetRenderer == null) {
-                showLoadingDialog("Loading helmet resources, please wait...", Resources.GUI_LOADING_FUNCTION.HELMETS);
+                showLoadingDialog("Loading helmet resources, please wait...", Resources.GUI_LOADING_FUNCTION.HELMETS, () -> new ViewFrame("Helmets", "Helmet", "Helmets", this.helmetRenderer));
+            } else {
+                new ViewFrame("Helmets", "Helmet", "Helmets", this.helmetRenderer);
             }
-
-            new ViewFrame("Helmets", "Helmet", "Helmets", this.helmetRenderer);
         } else if (ae.getSource() == this.viewItemMenuItem) {
             // Initialize Item Data if needed
             if (this.itemRenderer == null) {
-                showLoadingDialog("Loading item resources, please wait...", Resources.GUI_LOADING_FUNCTION.ITEMS);
+                showLoadingDialog("Loading item resources, please wait...", Resources.GUI_LOADING_FUNCTION.ITEMS, () -> new ViewFrame("Items", "Item", "Items", this.itemRenderer));
+            } else {
+                new ViewFrame("Items", "Item", "Items", this.itemRenderer);
             }
-
-            new ViewFrame("Items", "Item", "Items", this.itemRenderer);
         } else if (ae.getSource() == this.viewLegendResourceMenuItem) {
           // Initialize Legend Resource Data if needed
           if (this.legendResourceRenderer == null) {
-              showLoadingDialog("Loading legend resources, please wait...", Resources.GUI_LOADING_FUNCTION.LEGEND_RESOURCES);
+              showLoadingDialog("Loading legend resources, please wait...", Resources.GUI_LOADING_FUNCTION.LEGEND_RESOURCES, () -> new ViewFrame("Legend Resources", "Legend Resource", "Legend Resources", this.legendResourceRenderer));
+          } else {
+                new ViewFrame("Legend Resources", "Legend Resource", "Legend Resources", this.legendResourceRenderer);
           }
-
-          new ViewFrame("Legend Resources", "Legend Resource", "Legend Resources", this.legendResourceRenderer);
         } else if (ae.getSource() == this.viewSanResourceMenuItem) {
           // Initialize San Resource Data if needed
           if (this.sanResourceRenderer == null) {
-              showLoadingDialog("Loading san resources, please wait...", Resources.GUI_LOADING_FUNCTION.SAN_RESOURCES);
+              showLoadingDialog("Loading san resources, please wait...", Resources.GUI_LOADING_FUNCTION.SAN_RESOURCES, () -> new ViewFrame("San Resources", "San Resource", "San Resources", this.sanResourceRenderer));
+          } else {
+                new ViewFrame("San Resources", "San Resource", "San Resources", this.sanResourceRenderer);
           }
-
-          new ViewFrame("San Resources", "San Resource", "San Resources", this.sanResourceRenderer);
         } else if (ae.getSource() == this.viewMantleMenuItem) {
             // Initialize Mantle Data if needed
             if (this.mantleRenderer == null) {
-                showLoadingDialog("Loading mantle resources, please wait...", Resources.GUI_LOADING_FUNCTION.MANTLES);
+                showLoadingDialog("Loading mantle resources, please wait...", Resources.GUI_LOADING_FUNCTION.MANTLES, () -> new ViewFrame("Mantles", "Mantle", "Mantles", this.mantleRenderer));
+            } else {
+                new ViewFrame("Mantles", "Mantle", "Mantles", this.mantleRenderer);
             }
-
-            new ViewFrame("Mantles", "Mantle", "Mantles", this.mantleRenderer);
         } else if (ae.getSource() == this.viewMiniMapResourceMenuItem) {
             // Initialize Mini Map Resource Data if needed
             if (this.miniMapResourceRenderers == null) {
-                showLoadingDialog("Loading mini map resources, please wait...", Resources.GUI_LOADING_FUNCTION.MINI_MAP_RESOURCES);
+                showLoadingDialog("Loading mini map resources, please wait...", Resources.GUI_LOADING_FUNCTION.MINI_MAP_RESOURCES, () -> new ViewFrame("Mini Map Resources", "Mini Map Resource", "Mini Map Resources", this.miniMapResourceRenderers));
+            } else {
+                new ViewFrame("Mini Map Resources", "Mini Map Resource", "Mini Map Resources", this.miniMapResourceRenderers);
             }
-
-            new ViewFrame("Mini Map Resources", "Mini Map Resource", "Mini Map Resources", this.miniMapResourceRenderers);
         } else if (ae.getSource() == this.viewMobMenuItem) {
             // Initialize Mob Data if needed
             if (this.mobRenderer == null) {
-                showLoadingDialog("Loading mob resources, please wait...", Resources.GUI_LOADING_FUNCTION.MOBS);
+                showLoadingDialog("Loading mob resources, please wait...", Resources.GUI_LOADING_FUNCTION.MOBS, () -> new ViewFrame("Mobs", "Mob", "Mobs", this.mobRenderer));
+            } else {
+                new ViewFrame("Mobs", "Mob", "Mobs", this.mobRenderer);
             }
-
-            new ViewFrame("Mobs", "Mob", "Mobs", this.mobRenderer);
         } else if (ae.getSource() == this.viewMusicMenuItem) {
             // Initialize Music Data if needed
 //            if (this.mobRenderer == null) {
-//                showLoadingDialog("Loading mob resources, please wait...", Resources.GUI_LOADING_FUNCTION.MOBS);
+//                showLoadingDialog("Loading mob resources, please wait...", Resources.GUI_LOADING_FUNCTION.MOBS, () -> {
+//                    new ViewFrame("Music", "Music", "Music", null);
+//                });
+//            } else {
+//                new ViewFrame("Music", "Music", "Music", null);
 //            }
-
-            //new ViewFrame("Music", "Music", "Music", null);
         } else if (ae.getSource() == this.viewSpearMenuItem) {
             // Initialize Spear Data if needed
             if (this.spearRenderer == null) {
-                showLoadingDialog("Loading spear resources, please wait...", Resources.GUI_LOADING_FUNCTION.SPEARS);
+                showLoadingDialog("Loading spear resources, please wait...", Resources.GUI_LOADING_FUNCTION.SPEARS, () -> {
+                    new ViewFrame("Spears", "Spear", "Spears", this.spearRenderer);
+                });
+            } else {
+                new ViewFrame("Spears", "Spear", "Spears", this.spearRenderer);
             }
-
-            new ViewFrame("Spears", "Spear", "Spears", this.spearRenderer);
         } else if (ae.getSource() == this.viewShieldMenuItem) {
             // Initialize Shield Data if needed
             if (this.shieldRenderer == null) {
-                showLoadingDialog("Loading shield resources, please wait...", Resources.GUI_LOADING_FUNCTION.SHIELDS);
+                showLoadingDialog("Loading shield resources, please wait...", Resources.GUI_LOADING_FUNCTION.SHIELDS, () -> new ViewFrame("Shields", "Shield", "Shields", this.shieldRenderer));
+            } else {
+                new ViewFrame("Shields", "Shield", "Shields", this.shieldRenderer);
             }
-
-            new ViewFrame("Shields", "Shield", "Shields", this.shieldRenderer);
         } else if (ae.getSource() == this.viewShoesMenuItem) {
             // Initialize Shoes Data if needed
             if (this.shoeRenderer == null) {
-                showLoadingDialog("Loading shoes resources, please wait...", Resources.GUI_LOADING_FUNCTION.SHOES);
+                showLoadingDialog("Loading shoes resources, please wait...", Resources.GUI_LOADING_FUNCTION.SHOES, () -> new ViewFrame("Shoes", "Shoe", "Shoes", this.shoeRenderer));
+            } else {
+                new ViewFrame("Shoes", "Shoe", "Shoes", this.shoeRenderer);
             }
-
-            new ViewFrame("Shoes", "Shoe", "Shoes", this.shoeRenderer);
         } else if (ae.getSource() == this.viewSwordMenuItem) {
             // Initialize Sword Data if needed
             if (this.swordRenderer == null) {
-                showLoadingDialog("Loading sword resources, please wait...", Resources.GUI_LOADING_FUNCTION.SWORDS);
+                showLoadingDialog("Loading sword resources, please wait...", Resources.GUI_LOADING_FUNCTION.SWORDS, () -> new ViewFrame("Swords", "Sword", "Swords", this.swordRenderer));
+            } else {
+                new ViewFrame("Swords", "Sword", "Swords", this.swordRenderer);
             }
-
-            new ViewFrame("Swords", "Sword", "Swords", this.swordRenderer);
         } else if (ae.getSource() == this.viewWorldMapMenuItem) {
             // Initialize World Map Data if needed
             if (this.worldMapRenderers == null) {
-                showLoadingDialog("Loading world map resources, please wait...", Resources.GUI_LOADING_FUNCTION.WORLD_MAPS);
+                showLoadingDialog("Loading world map resources, please wait...", Resources.GUI_LOADING_FUNCTION.WORLD_MAPS, () -> new ViewFrame("World Maps", "World Map", "World Maps", this.worldMapRenderers));
+            } else {
+                new ViewFrame("World Maps", "World Map", "World Maps", this.worldMapRenderers);
             }
-
-            new ViewFrame("World Maps", "World Map", "World Maps", this.worldMapRenderers);
         } else if (ae.getSource() == this.exitMenuItem) {
             System.exit(0);
         }

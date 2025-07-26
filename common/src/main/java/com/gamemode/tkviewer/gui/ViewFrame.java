@@ -191,6 +191,16 @@ public class ViewFrame extends JFrame implements ActionListener, KeyListener {
                 paletteComboBox.addItem("Palette " + i);
             }
             paletteComboBox.setVisible(true);
+        } else if (renderers.get(0) instanceof TileRenderer) {
+            TileRenderer renderer = (TileRenderer) renderers.get(0);
+            for (int i = 0; i < renderer.tilePal.paletteCount; i++) {
+                paletteComboBox.addItem("Palette " + i);
+            }
+            paletteComboBox.setVisible(true);
+        }
+
+        if (paletteComboBox.getItemCount() > 0) {
+            paletteComboBox.setSelectedIndex(0);
         }
 
         this.setVisible(true);
