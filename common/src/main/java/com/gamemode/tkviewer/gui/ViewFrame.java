@@ -508,13 +508,16 @@ public class ViewFrame extends JFrame implements ActionListener {
                 int rendererIndex = determineRendererIndex(index);
                 for (int selectedFrame : selectedFrames) {
                     int frameIndex = renderers.get(rendererIndex).getFrameIndex(index, selectedFrame);
+                    System.out.println("Replacing frame " + frameIndex + " in item " + index);
                     com.gamemode.tkviewer.Frame newFrame;
                     if (renderers.get(rendererIndex) instanceof PartRenderer) {
                         PartRenderer partRenderer = (PartRenderer) renderers.get(rendererIndex);
                         newFrame = new com.gamemode.tkviewer.Frame(replacementImage, partRenderer.partPal.palettes.get((int)partRenderer.partDsc.parts.get(index).getPaletteId()));
+                        System.out.println("New frame dimensions: " + newFrame.getWidth() + "x" + newFrame.getHeight());
                     } else if (renderers.get(rendererIndex) instanceof MobRenderer) {
                         MobRenderer mobRenderer = (MobRenderer) renderers.get(rendererIndex);
                         newFrame = new com.gamemode.tkviewer.Frame(replacementImage, mobRenderer.mobPal.palettes.get((int)mobRenderer.mobDna.mobs.get(index).getPaletteId()));
+                        System.out.println("New frame dimensions: " + newFrame.getWidth() + "x" + newFrame.getHeight());
                     } else {
                         // Should not happen
                         return;
@@ -522,6 +525,9 @@ public class ViewFrame extends JFrame implements ActionListener {
                     renderers.get(rendererIndex).replaceFrame(index, frameIndex, newFrame);
                 }
                 renderFrames(index);
+                imagePanel.revalidate();
+                imagePanel.repaint();
+                System.out.println("Rendered frames after replacement.");
                 saveButton.setEnabled(true);
             } catch (Exception e) {
                 e.printStackTrace();
