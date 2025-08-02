@@ -508,8 +508,17 @@ public class ViewFrame extends JFrame implements ActionListener {
                 int rendererIndex = determineRendererIndex(index);
                 for (int selectedFrame : selectedFrames) {
                     int frameIndex = renderers.get(rendererIndex).getFrameIndex(index, selectedFrame);
-                    PartRenderer partRenderer = (PartRenderer) renderers.get(rendererIndex);
-                    com.gamemode.tkviewer.Frame newFrame = new com.gamemode.tkviewer.Frame(replacementImage, partRenderer.partPal.palettes.get((int)partRenderer.partDsc.parts.get(index).getPaletteId()));
+                    com.gamemode.tkviewer.Frame newFrame;
+                    if (renderers.get(rendererIndex) instanceof PartRenderer) {
+                        PartRenderer partRenderer = (PartRenderer) renderers.get(rendererIndex);
+                        newFrame = new com.gamemode.tkviewer.Frame(replacementImage, partRenderer.partPal.palettes.get((int)partRenderer.partDsc.parts.get(index).getPaletteId()));
+                    } else if (renderers.get(rendererIndex) instanceof MobRenderer) {
+                        MobRenderer mobRenderer = (MobRenderer) renderers.get(rendererIndex);
+                        newFrame = new com.gamemode.tkviewer.Frame(replacementImage, mobRenderer.mobPal.palettes.get((int)mobRenderer.mobDna.mobs.get(index).getPaletteId()));
+                    } else {
+                        // Should not happen
+                        return;
+                    }
                     renderers.get(rendererIndex).replaceFrame(index, frameIndex, newFrame);
                 }
                 renderFrames(index);
