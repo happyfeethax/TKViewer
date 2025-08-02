@@ -611,7 +611,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 if (selectedFile.getName().equalsIgnoreCase("mon.dat")) {
-                    new MonDatViewer(new DatFileHandler(selectedFile));
+                    new MonDatViewer(new DatFileHandler(selectedFile), selectedFile);
                 } else {
                     new DatViewer(selectedFile);
                 }

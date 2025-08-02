@@ -16,10 +16,12 @@ public class MonDatViewer extends JFrame {
 
     DatFileHandler monDat;
     JList epfList;
+    File datFile;
 
-    public MonDatViewer(DatFileHandler monDat) {
+    public MonDatViewer(DatFileHandler monDat, File datFile) {
         super("mon.dat Viewer");
         this.monDat = monDat;
+        this.datFile = datFile;
 
         java.util.List<String> epfFiles = new java.util.ArrayList<>();
         for (String fileName : monDat.files.keySet()) {
@@ -39,7 +41,7 @@ public class MonDatViewer extends JFrame {
                 PalFileHandler palFileHandler = new PalFileHandler(monDat.getFile("monster.pal"));
                 DnaFileHandler dnaFileHandler = new DnaFileHandler(monDat.getFile("monster.dna"));
                 MobRenderer mobRenderer = new MobRenderer(java.util.Arrays.asList(epfFileHandler), palFileHandler, dnaFileHandler, 0);
-                new ViewFrame(selectedEpf, "Frame", "Frames", mobRenderer, monDat, new File(Resources.getNtkDataDirectory() + File.separator + "mon.dat"));
+                new ViewFrame(selectedEpf, "Frame", "Frames", mobRenderer, monDat, datFile);
             }
         });
 
