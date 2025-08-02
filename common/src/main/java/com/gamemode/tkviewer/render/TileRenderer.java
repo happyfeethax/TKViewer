@@ -243,4 +243,9 @@ public class TileRenderer implements Renderer {
             tileFrm.close();
         }
     }
+
+    @Override
+    public void replaceFrame(int partIndex, int frameIndex, com.gamemode.tkviewer.Frame newFrame) {
+        // Not implemented
+    }
 }

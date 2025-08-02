@@ -477,4 +477,9 @@ public class PartRenderer implements Renderer {
             partDsc.close();
         }
     }
+
+    @Override
+    public void replaceFrame(int partIndex, int frameIndex, Frame newFrame) {
+        // Not implemented
+    }
 }

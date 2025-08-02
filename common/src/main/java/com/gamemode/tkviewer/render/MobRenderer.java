@@ -288,4 +288,9 @@ public class MobRenderer implements Renderer {
             mobDna.close();
         }
     }
+
+    @Override
+    public void replaceFrame(int partIndex, int frameIndex, com.gamemode.tkviewer.Frame newFrame) {
+        // Not implemented
+    }
 }

@@ -37,8 +37,11 @@ public class ViewFrame extends JFrame implements ActionListener {
     JPanel imagePanel;
     JList list;
     Integer itemCount;
+    List<Integer> selectedFrames;
 
     JButton exportButton;
+    JButton replaceButton;
+    JButton saveButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
 
@@ -97,6 +100,8 @@ public class ViewFrame extends JFrame implements ActionListener {
         imagePanel.setBackground(Color.GRAY);
         imagePanel.setPreferredSize(new Dimension(600, 520));
 
+        selectedFrames = new ArrayList<Integer>();
+
         itemCount = 0;
         for (Renderer renderer : this.renderers) {
             itemCount += renderer.getCount(useEpfCount);
@@ -106,13 +111,14 @@ public class ViewFrame extends JFrame implements ActionListener {
             items[i] = this.singular + " " + i;
         }
         list = new JList(items);
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         list.setLayoutOrientation(JList.VERTICAL);
         list.setVisibleRowCount(-1);
         list.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
+                    clearSelectedFrames();
                     int idx = list.getSelectedIndex();
                     if (renderers.get(0) instanceof MobRenderer && !framesButton.isSelected()) {
                         renderMobAnimations(idx);
@@ -148,7 +154,16 @@ public class ViewFrame extends JFrame implements ActionListener {
         framesButton.addActionListener(this);
         animationsButton.addActionListener(this);
 
+        replaceButton = new JButton("Replace Frames");
+        replaceButton.addActionListener(this);
+
+        saveButton = new JButton("Save");
+        saveButton.addActionListener(this);
+        saveButton.setEnabled(false);
+
         statusPanel.add(exportButton);
+        statusPanel.add(replaceButton);
+        statusPanel.add(saveButton);
 
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
@@ -182,6 +197,15 @@ public class ViewFrame extends JFrame implements ActionListener {
         imagePanel.removeAll();
         imagePanel.revalidate();
         imagePanel.repaint();
+    }
+
+    private void clearSelectedFrames() {
+        selectedFrames.clear();
+        for (Component component : imagePanel.getComponents()) {
+            if (component instanceof JLabel) {
+                ((JLabel) component).setBorder(null);
+            }
+        }
     }
 
     public int determineEpfIndex(int index) {
@@ -341,6 +365,7 @@ public class ViewFrame extends JFrame implements ActionListener {
             final int frameIndex = renderers.get(rendererIndex).getFrameIndex(index, i);
             JLabel jLabel = new JLabel(new ImageIcon(images[i]));
             jLabel.setToolTipText(String.valueOf(i));
+            final int finalI = i;
             jLabel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -359,6 +384,14 @@ public class ViewFrame extends JFrame implements ActionListener {
                         loadingNotification.setLocationRelativeTo(ViewFrame.this);
                         loadingNotification.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                         loadingNotification.setVisible(true);
+                    } else if (SwingUtilities.isLeftMouseButton(e)) {
+                        if (selectedFrames.contains(finalI)) {
+                            selectedFrames.remove(Integer.valueOf(finalI));
+                            jLabel.setBorder(null);
+                        } else {
+                            selectedFrames.add(finalI);
+                            jLabel.setBorder(new LineBorder(Color.RED, 2));
+                        }
                     }
                 }
             });

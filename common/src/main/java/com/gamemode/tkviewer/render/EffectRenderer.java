@@ -217,4 +217,9 @@ public class EffectRenderer implements Renderer {
             effectFrm.close();
         }
     }
+
+    @Override
+    public void replaceFrame(int partIndex, int frameIndex, com.gamemode.tkviewer.Frame newFrame) {
+        // Not implemented
+    }
 }
