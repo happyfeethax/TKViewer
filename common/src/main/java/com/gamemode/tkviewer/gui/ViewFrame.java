@@ -254,13 +254,19 @@ public class ViewFrame extends JFrame implements ActionListener {
     public void saveFrames() {
         try {
             // Create a backup of the original file
-            Files.copy(this.datFile.toPath(), new File(this.datFile.getAbsolutePath() + ".bak").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Path backupPath = new File(this.datFile.getParentFile(), this.datFile.getName() + ".bak").toPath();
+            Files.copy(this.datFile.toPath(), backupPath, StandardCopyOption.REPLACE_EXISTING);
 
             // Update the dat file handler with the modified epf files
             for (Renderer renderer : this.renderers) {
                 if (renderer instanceof PartRenderer) {
                     PartRenderer partRenderer = (PartRenderer) renderer;
                     for (EpfFileHandler epf : partRenderer.partEpfs) {
+                        this.datFileHandler.files.put(epf.filePath, epf.toByteBuffer());
+                    }
+                } else if (renderer instanceof MobRenderer) {
+                    MobRenderer mobRenderer = (MobRenderer) renderer;
+                    for (EpfFileHandler epf : mobRenderer.mobEpfs) {
                         this.datFileHandler.files.put(epf.filePath, epf.toByteBuffer());
                     }
                 }
@@ -525,6 +531,7 @@ public class ViewFrame extends JFrame implements ActionListener {
                     renderers.get(rendererIndex).replaceFrame(index, frameIndex, newFrame);
                 }
                 renderFrames(index);
+                list.setSelectedIndex(index);
                 imagePanel.revalidate();
                 imagePanel.repaint();
                 System.out.println("Rendered frames after replacement.");
