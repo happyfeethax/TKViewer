@@ -1,6 +1,7 @@
 package com.gamemode.tkviewer.gui;
 
 import com.gamemode.tkviewer.file_handlers.DatFileHandler;
+import com.gamemode.tkviewer.file_handlers.DnaFileHandler;
 import com.gamemode.tkviewer.file_handlers.EpfFileHandler;
 import com.gamemode.tkviewer.file_handlers.PalFileHandler;
 import com.gamemode.tkviewer.render.MobRenderer;
@@ -36,7 +37,8 @@ public class MonDatViewer extends JFrame {
                 String selectedEpf = (String) epfList.getSelectedValue();
                 EpfFileHandler epfFileHandler = new EpfFileHandler(monDat.getFile(selectedEpf), selectedEpf);
                 PalFileHandler palFileHandler = new PalFileHandler(monDat.getFile("monster.pal"));
-                MobRenderer mobRenderer = new MobRenderer(java.util.Arrays.asList(epfFileHandler), palFileHandler, 0);
+                DnaFileHandler dnaFileHandler = new DnaFileHandler(monDat.getFile("monster.dna"));
+                MobRenderer mobRenderer = new MobRenderer(java.util.Arrays.asList(epfFileHandler), palFileHandler, dnaFileHandler, 0);
                 new ViewFrame(selectedEpf, "Frame", "Frames", mobRenderer, monDat, new File(Resources.getNtkDataDirectory() + File.separator + "mon.dat"));
             }
         });

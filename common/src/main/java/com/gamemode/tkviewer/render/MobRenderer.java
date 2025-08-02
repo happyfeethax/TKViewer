@@ -66,11 +66,12 @@ public class MobRenderer implements Renderer {
         this.mobDna = mobDna;
     }
 
-    public MobRenderer(List<EpfFileHandler> mobEpfs, PalFileHandler mobPal, int manualPaletteIndex) {
+    public MobRenderer(List<EpfFileHandler> mobEpfs, PalFileHandler mobPal, DnaFileHandler mobDna, int manualPaletteIndex) {
         mobs = new HashMap<Integer, BufferedImage>();
 
         this.mobEpfs = mobEpfs;
         this.mobPal = mobPal;
+        this.mobDna = mobDna;
         this.manualPaletteIndex = manualPaletteIndex;
     }
 
