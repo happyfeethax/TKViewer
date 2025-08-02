@@ -49,6 +49,7 @@ public class ViewFrame extends JFrame implements ActionListener {
     JButton exportButton;
     JButton replaceButton;
     JButton saveButton;
+    JButton pasteButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
 
@@ -170,9 +171,17 @@ public class ViewFrame extends JFrame implements ActionListener {
         saveButton.addActionListener(this);
         saveButton.setEnabled(false);
 
+        pasteButton = new JButton("Paste Frame");
+        pasteButton.addActionListener(this);
+        pasteButton.setEnabled(false);
+        new Timer(100, (e) -> {
+            pasteButton.setEnabled(CopiedFrame.copiedFrame != null);
+        }).start();
+
         statusPanel.add(exportButton);
         statusPanel.add(replaceButton);
         statusPanel.add(saveButton);
+        statusPanel.add(pasteButton);
 
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
@@ -214,6 +223,31 @@ public class ViewFrame extends JFrame implements ActionListener {
             if (component instanceof JLabel) {
                 ((JLabel) component).setBorder(null);
             }
+        }
+    }
+
+    public void pasteFrames(int index) {
+        if (selectedFrames.size() == 0) {
+            JOptionPane.showMessageDialog(this, "No frames selected to paste into.", "TKViewer", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (CopiedFrame.copiedFrame == null) {
+            JOptionPane.showMessageDialog(this, "No frame copied.", "TKViewer", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            int rendererIndex = determineRendererIndex(index);
+            for (int selectedFrame : selectedFrames) {
+                int frameIndex = renderers.get(rendererIndex).getFrameIndex(index, selectedFrame);
+                renderers.get(rendererIndex).replaceFrame(index, frameIndex, CopiedFrame.copiedFrame);
+            }
+            renderFrames(index);
+            saveButton.setEnabled(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error pasting frames: " + e.getMessage(), "TKViewer", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -510,6 +544,8 @@ public class ViewFrame extends JFrame implements ActionListener {
             this.replaceFrames(listIndex);
         } else if (ae.getSource() == this.saveButton) {
             this.saveFrames();
+        } else if (ae.getSource() == this.pasteButton) {
+            this.pasteFrames(listIndex);
         }
     }
 }

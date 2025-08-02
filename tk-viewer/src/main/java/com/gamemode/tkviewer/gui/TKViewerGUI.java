@@ -37,6 +37,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
 
     JMenu fileMenu = new JMenu("File");
     JMenu openMenu = new JMenu("Open");
+    JMenuItem openDatMenuItem = new JMenuItem("DAT File (*.dat)");
     JMenuItem openMapMenuItem = new JMenuItem("Map File (*.cmp | *.map)");
     JMenuItem exitMenuItem = new JMenuItem("Exit");
 
@@ -123,6 +124,10 @@ public class TKViewerGUI extends JFrame implements ActionListener {
         // Add Menu
         menuBar = new JMenuBar();
         this.setJMenuBar(menuBar);
+
+        // File > Open > DAT File
+        openDatMenuItem.addActionListener(this);
+        openMenu.add(openDatMenuItem);
 
         // File > Open > Map File
         openMapMenuItem.addActionListener(this);
@@ -591,8 +596,23 @@ public class TKViewerGUI extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent ae) {
+        // Open DAT
+        if (ae.getSource() == this.openDatMenuItem) {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Select a NexusTK DAT file");
+
+            fileChooser.setCurrentDirectory(new File(Resources.getNtkDataDirectory()));
+            fileChooser.setAcceptAllFileFilterUsed(false);
+            FileNameExtensionFilter datFilter = new FileNameExtensionFilter("DAT files (*.dat)", "dat");
+            fileChooser.addChoosableFileFilter(datFilter);
+
+            int result = fileChooser.showOpenDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                new DatViewer(fileChooser.getSelectedFile());
+            }
+        }
         // Open Map
-        if (ae.getSource() == this.openMapMenuItem) {
+        else if (ae.getSource() == this.openMapMenuItem) {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Select a NexusTK map");
 
