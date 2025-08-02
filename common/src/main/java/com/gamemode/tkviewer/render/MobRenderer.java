@@ -138,7 +138,8 @@ public class MobRenderer implements Renderer {
 
         // Determine Canvas Size
         int l, t, r, b;
-        l = t = r = b = 0;
+        l = t = Integer.MAX_VALUE;
+        r = b = Integer.MIN_VALUE;
         for (int i = 0; i < mob.getChunkCount(); i++) {
             MobChunk chunk = mob.getChunks().get(i);
             int frameCount = chunk.getBlockCount();
