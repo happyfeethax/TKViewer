@@ -32,6 +32,8 @@ public class ViewFrame extends JFrame implements ActionListener {
     List<Renderer> renderers;
     String singular;
     String plural;
+    DatFileHandler datFileHandler;
+    File datFile;
 
     Image clientIcon;
     JPanel imagePanel;
@@ -45,11 +47,13 @@ public class ViewFrame extends JFrame implements ActionListener {
     JRadioButton framesButton;
     JRadioButton animationsButton;
 
-    public ViewFrame(String title, String singular, String plural) {
+    public ViewFrame(String title, String singular, String plural, DatFileHandler datFileHandler, File datFile) {
         // Configure Frame
         this.setTitle(title);
         this.singular = singular;
         this.plural = plural;
+        this.datFileHandler = datFileHandler;
+        this.datFile = datFile;
         this.setLayout(new FlowLayout());
         this.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         this.clientIcon = Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(Resources.CLIENT_ICON));
@@ -59,37 +63,37 @@ public class ViewFrame extends JFrame implements ActionListener {
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
-    public ViewFrame(String title, String singular, String plural, EffectRenderer effectRenderer) {
-        this(title, singular, plural);
+    public ViewFrame(String title, String singular, String plural, EffectRenderer effectRenderer, DatFileHandler datFileHandler, File datFile) {
+        this(title, singular, plural, datFileHandler, datFile);
         this.renderers = Arrays.asList(effectRenderer);
         this.configure(false);
     }
 
-    public ViewFrame(String title, String singular, String plural, MobRenderer mobRenderer) {
-        this(title, singular, plural);
+    public ViewFrame(String title, String singular, String plural, MobRenderer mobRenderer, DatFileHandler datFileHandler, File datFile) {
+        this(title, singular, plural, datFileHandler, datFile);
         this.renderers = Arrays.asList(mobRenderer);
         this.configure(false);
     }
 
-    public ViewFrame(String title, String singular, String plural, PartRenderer partRenderer) {
-        this(title, singular, plural);
+    public ViewFrame(String title, String singular, String plural, PartRenderer partRenderer, DatFileHandler datFileHandler, File datFile) {
+        this(title, singular, plural, datFileHandler, datFile);
         this.renderers = Arrays.asList(partRenderer);
         this.configure(false);
     }
 
-    public ViewFrame(String title, String singular, String plural, TileRenderer tileRenderer) {
-        this(title, singular, plural, tileRenderer, false);
+    public ViewFrame(String title, String singular, String plural, TileRenderer tileRenderer, DatFileHandler datFileHandler, File datFile) {
+        this(title, singular, plural, tileRenderer, false, datFileHandler, datFile);
     }
 
-    public ViewFrame(String title, String singular, String plural, ArrayList<TileRenderer> tileRenderers) {
-        this(title, singular, plural);
+    public ViewFrame(String title, String singular, String plural, ArrayList<TileRenderer> tileRenderers, DatFileHandler datFileHandler, File datFile) {
+        this(title, singular, plural, datFileHandler, datFile);
         this.renderers = new ArrayList<Renderer>();
         this.renderers.addAll(tileRenderers);
         this.configure(false);
     }
 
-    public ViewFrame(String title, String singular, String plural, TileRenderer tileRenderer, boolean useEpfCount) {
-        this(title, singular, plural);
+    public ViewFrame(String title, String singular, String plural, TileRenderer tileRenderer, boolean useEpfCount, DatFileHandler datFileHandler, File datFile) {
+        this(title, singular, plural, datFileHandler, datFile);
         this.renderers = Arrays.asList(tileRenderer);
         this.configure(useEpfCount);
     }
@@ -205,6 +209,33 @@ public class ViewFrame extends JFrame implements ActionListener {
             if (component instanceof JLabel) {
                 ((JLabel) component).setBorder(null);
             }
+        }
+    }
+
+    public void saveFrames() {
+        try {
+            // Create a backup of the original file
+            Files.copy(this.datFile.toPath(), new File(this.datFile.getAbsolutePath() + ".bak").toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            // Update the dat file handler with the modified epf files
+            for (Renderer renderer : this.renderers) {
+                if (renderer instanceof PartRenderer) {
+                    PartRenderer partRenderer = (PartRenderer) renderer;
+                    for (EpfFileHandler epf : partRenderer.partEpfs) {
+                        this.datFileHandler.files.put(epf.filePath, epf.toByteBuffer());
+                    }
+                }
+            }
+
+            // Write the updated dat file
+            this.datFileHandler.writeDatFile(this.datFile.toPath());
+
+            // Disable the save button and show a success message
+            saveButton.setEnabled(false);
+            JOptionPane.showMessageDialog(this, "Frames saved successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error saving frames: " + e.getMessage(), "TKViewer", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -421,6 +452,36 @@ public class ViewFrame extends JFrame implements ActionListener {
         }
     }
 
+    public void replaceFrames(int index) {
+        if (selectedFrames.size() == 0) {
+            JOptionPane.showMessageDialog(this, "No frames selected to replace.", "TKViewer", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setDialogTitle("Choose replacement image");
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            try {
+                BufferedImage replacementImage = javax.imageio.ImageIO.read(selectedFile);
+                int rendererIndex = determineRendererIndex(index);
+                for (int selectedFrame : selectedFrames) {
+                    int frameIndex = renderers.get(rendererIndex).getFrameIndex(index, selectedFrame);
+                    PartRenderer partRenderer = (PartRenderer) renderers.get(rendererIndex);
+                    Frame newFrame = new Frame(replacementImage, partRenderer.partPal.getPalettes().get((int)partRenderer.partDsc.getParts().get(index).getPaletteId()));
+                    renderers.get(rendererIndex).replaceFrame(index, frameIndex, newFrame);
+                }
+                renderFrames(index);
+                saveButton.setEnabled(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error replacing frames: " + e.getMessage(), "TKViewer", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent ae) {
         int listIndex = list.getSelectedIndex();
@@ -440,6 +501,10 @@ public class ViewFrame extends JFrame implements ActionListener {
             }
         } else if (ae.getSource() == this.exportButton) {
             this.exportFrames(listIndex);
+        } else if (ae.getSource() == this.replaceButton) {
+            this.replaceFrames(listIndex);
+        } else if (ae.getSource() == this.saveButton) {
+            this.saveFrames();
         }
     }
 }

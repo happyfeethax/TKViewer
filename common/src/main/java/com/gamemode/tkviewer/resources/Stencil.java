@@ -14,6 +14,11 @@ public class Stencil {
     public ByteBuffer rawStencilData;
     public List<boolean[]> rows;
 
+    public Stencil(List<boolean[]> rows) {
+        this.rows = rows;
+        this.rawStencilData = this.toByteBuffer();
+    }
+
     public Stencil(EpfFileHandler epfFileHandler, Long stencilDataOffset, Dimension dimensions) {
         // Seek to Stencil Data
         epfFileHandler.seek(EpfFileHandler.HEADER_SIZE + stencilDataOffset, true);
@@ -75,6 +80,48 @@ public class Stencil {
     }
 
     public ByteBuffer toByteBuffer() {
+        if (this.rawStencilData != null) {
+            return this.rawStencilData;
+        }
+
+        ArrayList<Byte> rawStencilDataArray = new ArrayList<Byte>();
+        for (boolean[] row : this.rows) {
+            if (row.length == 0) {
+                rawStencilDataArray.add((byte) 0);
+                continue;
+            }
+
+            boolean currentRun = row[0];
+            int runLength = 0;
+            for (int i = 0; i < row.length; i++) {
+                if (row[i] == currentRun) {
+                    runLength++;
+                } else {
+                    byte stencilValue = (byte) runLength;
+                    if (currentRun) {
+                        stencilValue |= MASK;
+                    }
+                    rawStencilDataArray.add(stencilValue);
+
+                    currentRun = row[i];
+                    runLength = 1;
+                }
+            }
+
+            byte stencilValue = (byte) runLength;
+            if (currentRun) {
+                stencilValue |= MASK;
+            }
+            rawStencilDataArray.add(stencilValue);
+            rawStencilDataArray.add((byte) 0);
+        }
+
+        rawStencilData = ByteBuffer.allocate(rawStencilDataArray.size());
+        for (Byte b : rawStencilDataArray) {
+            rawStencilData.put(b);
+        }
+        rawStencilData.flip();
+
         return this.rawStencilData;
     }
 }

@@ -101,6 +101,8 @@ public class TKViewerGUI extends JFrame implements ActionListener {
     Image scaledMap;
 
     File saveFile;
+    File charDatFile;
+    DatFileHandler charDat;
 
     Dimension MAX_IMAGE_DIMENSIONS = new Dimension(800, 600);
 
@@ -109,6 +111,9 @@ public class TKViewerGUI extends JFrame implements ActionListener {
         this.setPreferredSize(new Dimension(640, 480));
         this.clientIcon = Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("client_icon.png"));
         this.setIconImage(this.clientIcon);
+
+        this.charDatFile = new File(Resources.getNtkDataDirectory() + File.separator + "char.dat");
+        this.charDat = new DatFileHandler(this.charDatFile);
 
         initMenu();
     }
@@ -325,17 +330,17 @@ public class TKViewerGUI extends JFrame implements ActionListener {
                         break;
                     case BODIES:
                         if (bodyRenderer == null) {
-                            bodyRenderer = RenderUtils.createBodyRenderer();
+                            bodyRenderer = RenderUtils.createBodyRenderer(charDat);
                         }
                         break;
                     case BOWS:
                         if (bowRenderer == null) {
-                            bowRenderer = RenderUtils.createBowRenderer();
+                            bowRenderer = RenderUtils.createBowRenderer(charDat);
                         }
                         break;
                     case COATS:
                         if (coatRenderer == null) {
-                            coatRenderer = RenderUtils.createCoatRenderer();
+                            coatRenderer = RenderUtils.createCoatRenderer(charDat);
                         }
                         break;
                     case EFFECTS:
@@ -345,27 +350,27 @@ public class TKViewerGUI extends JFrame implements ActionListener {
                         break;
                     case FACES:
                         if (faceRenderer == null) {
-                            faceRenderer = RenderUtils.createFaceRenderer();
+                            faceRenderer = RenderUtils.createFaceRenderer(charDat);
                         }
                         break;
                     case FACE_DEC:
                         if (faceDecRenderer == null) {
-                            faceDecRenderer = RenderUtils.createFaceDecRenderer();
+                            faceDecRenderer = RenderUtils.createFaceDecRenderer(charDat);
                         }
                         break;
                     case FANS:
                         if (fanRenderer == null) {
-                            fanRenderer = RenderUtils.createFanRenderer();
+                            fanRenderer = RenderUtils.createFanRenderer(charDat);
                         }
                         break;
                     case HAIR:
                         if (hairRenderer == null) {
-                            hairRenderer = RenderUtils.createHairRenderer();
+                            hairRenderer = RenderUtils.createHairRenderer(charDat);
                         }
                         break;
                     case HELMETS:
                         if (helmetRenderer == null) {
-                            helmetRenderer = RenderUtils.createHelmetRenderer();
+                            helmetRenderer = RenderUtils.createHelmetRenderer(charDat);
                         }
                         break;
                     case ITEMS:
@@ -385,7 +390,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
                         break;
                     case MANTLES:
                         if (mantleRenderer == null) {
-                            mantleRenderer = RenderUtils.createMantleRenderer();
+                            mantleRenderer = RenderUtils.createMantleRenderer(charDat);
                         }
                         break;
                     case MAPS:
@@ -405,22 +410,22 @@ public class TKViewerGUI extends JFrame implements ActionListener {
                         break;
                     case SPEARS:
                         if (spearRenderer == null) {
-                            spearRenderer = RenderUtils.createSpearRenderer();
+                            spearRenderer = RenderUtils.createSpearRenderer(charDat);
                         }
                         break;
                     case SHIELDS:
                         if (shieldRenderer == null) {
-                            shieldRenderer = RenderUtils.createShieldRenderer();
+                            shieldRenderer = RenderUtils.createShieldRenderer(charDat);
                         }
                         break;
                     case SHOES:
                         if (shoeRenderer == null) {
-                            shoeRenderer = RenderUtils.createShoeRenderer();
+                            shoeRenderer = RenderUtils.createShoeRenderer(charDat);
                         }
                         break;
                     case SWORDS:
                         if (swordRenderer == null) {
-                            swordRenderer = RenderUtils.createSwordRenderer();
+                            swordRenderer = RenderUtils.createSwordRenderer(charDat);
                         }
                         break;
                     case WORLD_MAPS:
@@ -628,105 +633,105 @@ public class TKViewerGUI extends JFrame implements ActionListener {
                 showLoadingDialog("Loading body resources, please wait...", Resources.GUI_LOADING_FUNCTION.BODIES);
             }
 
-            new ViewFrame("Bodies", "Body", "Bodies", this.bodyRenderer);
+            new ViewFrame("Bodies", "Body", "Bodies", this.bodyRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewBowMenuItem) {
             // Initialize Bow Data if needed
             if (this.bowRenderer == null) {
                 showLoadingDialog("Loading bow resources, please wait...", Resources.GUI_LOADING_FUNCTION.BOWS);
             }
 
-            new ViewFrame("Bows", "Bow", "Bows", this.bowRenderer);
+            new ViewFrame("Bows", "Bow", "Bows", this.bowRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewCoatMenuItem) {
             // Initialize Coat Data if needed
             if (this.coatRenderer == null) {
                 showLoadingDialog("Loading coat resources, please wait...", Resources.GUI_LOADING_FUNCTION.COATS);
             }
 
-            new ViewFrame("Coats", "Coat", "Coats", this.coatRenderer);
+            new ViewFrame("Coats", "Coat", "Coats", this.coatRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewEffectMenuItem) {
             // Initialize Effect Data if needed
             if (this.effectRenderer == null) {
                 showLoadingDialog("Loading effect resources, please wait...", Resources.GUI_LOADING_FUNCTION.EFFECTS);
             }
 
-            new ViewFrame("Effects", "Effect", "Effects", this.effectRenderer);
+            new ViewFrame("Effects", "Effect", "Effects", this.effectRenderer, null, null);
         } else if (ae.getSource() == this.viewFaceMenuItem) {
             // Initialize Face Data if needed
             if (this.faceRenderer == null) {
                 showLoadingDialog("Loading face resources, please wait...", Resources.GUI_LOADING_FUNCTION.FACES);
             }
 
-            new ViewFrame("Faces", "Face", "Faces", this.faceRenderer);
+            new ViewFrame("Faces", "Face", "Faces", this.faceRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewFaceDecMenuItem) {
             // Initialize Face Dec Data if needed
             if (this.faceDecRenderer == null) {
                 showLoadingDialog("Loading face decoration resources, please wait...", Resources.GUI_LOADING_FUNCTION.FACE_DEC);
             }
 
-            new ViewFrame("Face Decorations", "Face Decoration", "Face Decorations", this.faceDecRenderer);
+            new ViewFrame("Face Decorations", "Face Decoration", "Face Decorations", this.faceDecRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewFanMenuItem) {
             // Initialize Fan Data if needed
             if (this.fanRenderer == null) {
                 showLoadingDialog("Loading fan resources, please wait...", Resources.GUI_LOADING_FUNCTION.FANS);
             }
 
-            new ViewFrame("Fans", "Fan", "Fans", this.fanRenderer);
+            new ViewFrame("Fans", "Fan", "Fans", this.fanRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewHairMenuItem) {
             // Initialize Hair Data if needed
             if (this.hairRenderer == null) {
                 showLoadingDialog("Loading hair resources, please wait...", Resources.GUI_LOADING_FUNCTION.HAIR);
             }
 
-            new ViewFrame("Hair", "Hair", "Hair", this.hairRenderer);
+            new ViewFrame("Hair", "Hair", "Hair", this.hairRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewHelmetMenuItem) {
             // Initialize Hair Data if needed
             if (this.helmetRenderer == null) {
                 showLoadingDialog("Loading helmet resources, please wait...", Resources.GUI_LOADING_FUNCTION.HELMETS);
             }
 
-            new ViewFrame("Helmets", "Helmet", "Helmets", this.helmetRenderer);
+            new ViewFrame("Helmets", "Helmet", "Helmets", this.helmetRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewItemMenuItem) {
             // Initialize Item Data if needed
             if (this.itemRenderer == null) {
                 showLoadingDialog("Loading item resources, please wait...", Resources.GUI_LOADING_FUNCTION.ITEMS);
             }
 
-            new ViewFrame("Items", "Item", "Items", this.itemRenderer);
+            new ViewFrame("Items", "Item", "Items", this.itemRenderer, null, null);
         } else if (ae.getSource() == this.viewLegendResourceMenuItem) {
           // Initialize Legend Resource Data if needed
           if (this.legendResourceRenderer == null) {
               showLoadingDialog("Loading legend resources, please wait...", Resources.GUI_LOADING_FUNCTION.LEGEND_RESOURCES);
           }
 
-          new ViewFrame("Legend Resources", "Legend Resource", "Legend Resources", this.legendResourceRenderer);
+          new ViewFrame("Legend Resources", "Legend Resource", "Legend Resources", this.legendResourceRenderer, null, null);
         } else if (ae.getSource() == this.viewSanResourceMenuItem) {
           // Initialize San Resource Data if needed
           if (this.sanResourceRenderer == null) {
               showLoadingDialog("Loading san resources, please wait...", Resources.GUI_LOADING_FUNCTION.SAN_RESOURCES);
           }
 
-          new ViewFrame("San Resources", "San Resource", "San Resources", this.sanResourceRenderer);
+          new ViewFrame("San Resources", "San Resource", "San Resources", this.sanResourceRenderer, null, null);
         } else if (ae.getSource() == this.viewMantleMenuItem) {
             // Initialize Mantle Data if needed
             if (this.mantleRenderer == null) {
                 showLoadingDialog("Loading mantle resources, please wait...", Resources.GUI_LOADING_FUNCTION.MANTLES);
             }
 
-            new ViewFrame("Mantles", "Mantle", "Mantles", this.mantleRenderer);
+            new ViewFrame("Mantles", "Mantle", "Mantles", this.mantleRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewMiniMapResourceMenuItem) {
             // Initialize Mini Map Resource Data if needed
             if (this.miniMapResourceRenderers == null) {
                 showLoadingDialog("Loading mini map resources, please wait...", Resources.GUI_LOADING_FUNCTION.MINI_MAP_RESOURCES);
             }
 
-            new ViewFrame("Mini Map Resources", "Mini Map Resource", "Mini Map Resources", this.miniMapResourceRenderers);
+            new ViewFrame("Mini Map Resources", "Mini Map Resource", "Mini Map Resources", this.miniMapResourceRenderers, null, null);
         } else if (ae.getSource() == this.viewMobMenuItem) {
             // Initialize Mob Data if needed
             if (this.mobRenderer == null) {
                 showLoadingDialog("Loading mob resources, please wait...", Resources.GUI_LOADING_FUNCTION.MOBS);
             }
 
-            new ViewFrame("Mobs", "Mob", "Mobs", this.mobRenderer);
+            new ViewFrame("Mobs", "Mob", "Mobs", this.mobRenderer, null, null);
         } else if (ae.getSource() == this.viewMusicMenuItem) {
             // Initialize Music Data if needed
 //            if (this.mobRenderer == null) {
@@ -740,35 +745,35 @@ public class TKViewerGUI extends JFrame implements ActionListener {
                 showLoadingDialog("Loading spear resources, please wait...", Resources.GUI_LOADING_FUNCTION.SPEARS);
             }
 
-            new ViewFrame("Spears", "Spear", "Spears", this.spearRenderer);
+            new ViewFrame("Spears", "Spear", "Spears", this.spearRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewShieldMenuItem) {
             // Initialize Shield Data if needed
             if (this.shieldRenderer == null) {
                 showLoadingDialog("Loading shield resources, please wait...", Resources.GUI_LOADING_FUNCTION.SHIELDS);
             }
 
-            new ViewFrame("Shields", "Shield", "Shields", this.shieldRenderer);
+            new ViewFrame("Shields", "Shield", "Shields", this.shieldRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewShoesMenuItem) {
             // Initialize Shoes Data if needed
             if (this.shoeRenderer == null) {
                 showLoadingDialog("Loading shoes resources, please wait...", Resources.GUI_LOADING_FUNCTION.SHOES);
             }
 
-            new ViewFrame("Shoes", "Shoe", "Shoes", this.shoeRenderer);
+            new ViewFrame("Shoes", "Shoe", "Shoes", this.shoeRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewSwordMenuItem) {
             // Initialize Sword Data if needed
             if (this.swordRenderer == null) {
                 showLoadingDialog("Loading sword resources, please wait...", Resources.GUI_LOADING_FUNCTION.SWORDS);
             }
 
-            new ViewFrame("Swords", "Sword", "Swords", this.swordRenderer);
+            new ViewFrame("Swords", "Sword", "Swords", this.swordRenderer, charDat, charDatFile);
         } else if (ae.getSource() == this.viewWorldMapMenuItem) {
             // Initialize World Map Data if needed
             if (this.worldMapRenderers == null) {
                 showLoadingDialog("Loading world map resources, please wait...", Resources.GUI_LOADING_FUNCTION.WORLD_MAPS);
             }
 
-            new ViewFrame("World Maps", "World Map", "World Maps", this.worldMapRenderers);
+            new ViewFrame("World Maps", "World Map", "World Maps", this.worldMapRenderers, null, null);
         } else if (ae.getSource() == this.exitMenuItem) {
             System.exit(0);
         }

@@ -39,6 +39,24 @@ public class FileUtils {
         return createEpfsFromDats(epfPrefix, datPrefix, "epf", isBaram);
     }
 
+    public static List<EpfFileHandler> createEpfsFromDats(String epfPrefix, DatFileHandler datFileHandler, boolean isBaram) {
+        return createEpfsFromDats(epfPrefix, epfPrefix, "epf", datFileHandler, isBaram);
+    }
+
+    public static List<EpfFileHandler> createEpfsFromDats(String epfPrefix, String datPrefix, String extension, DatFileHandler datFileHandler, boolean isBaram) {
+        List<EpfFileHandler> epfFileHandlers = new ArrayList<EpfFileHandler>();
+
+        for (int i = 0; i < datFileHandler.files.size(); i++) {
+            ByteBuffer b = datFileHandler.getFile(epfPrefix + i + "." + extension);
+            if (b != null) {
+                EpfFileHandler epf = new EpfFileHandler(b, epfPrefix + i + "." + extension);
+                epfFileHandlers.add(epf);
+            }
+        }
+
+        return epfFileHandlers;
+    }
+
     public static List<EpfFileHandler> createEpfsFromDats(String epfPrefix, String datPrefix, String extension, boolean isBaram) {
         List<EpfFileHandler> epfFileHandlers = new ArrayList<EpfFileHandler>();
 

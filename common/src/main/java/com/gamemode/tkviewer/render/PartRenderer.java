@@ -108,6 +108,7 @@ public class PartRenderer implements Renderer {
 
     Map<Integer, BufferedImage> parts;
 
+    public DatFileHandler charDat;
     public List<EpfFileHandler> partEpfs;
     public PalFileHandler partPal;
     public DscFileHandler partDsc;
@@ -124,7 +125,8 @@ public class PartRenderer implements Renderer {
     public PartRenderer(String partName, DatFileHandler charDat, boolean isBaram) {
         parts = new HashMap<Integer, BufferedImage>();
 
-        this.partEpfs = FileUtils.createEpfsFromDats(partName, isBaram);
+        this.charDat = charDat;
+        this.partEpfs = FileUtils.createEpfsFromDats(partName, "char", "dat", charDat, isBaram);
         this.partPal = new PalFileHandler(charDat.getFile(partName + ".pal"));
         this.partDsc = new DscFileHandler(charDat.getFile(partName + ".dsc"), isBaram);
     }
@@ -480,6 +482,18 @@ public class PartRenderer implements Renderer {
 
     @Override
     public void replaceFrame(int partIndex, int frameIndex, Frame newFrame) {
-        // Not implemented
+        int epfIndex = 0;
+
+        int frameCount = 0;
+        for (int i = 0; i < partEpfs.size(); i++) {
+            if ((frameIndex) < (frameCount + this.partEpfs.get(i).frameCount)) {
+                epfIndex = i;
+                break;
+            }
+
+            frameCount += this.partEpfs.get(i).frameCount;
+        }
+
+        this.partEpfs.get(epfIndex).frames_map.put(frameIndex - frameCount, newFrame);
     }
 }

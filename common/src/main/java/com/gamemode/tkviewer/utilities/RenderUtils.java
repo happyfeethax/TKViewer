@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class RenderUtils {
-    public static DatFileHandler CHAR_DAT = new DatFileHandler(Resources.getNtkDataDirectory() + File.separator + "char.dat");
-
     /**
      * Private constructor to prevent instantiation of static utility class
      */
@@ -134,26 +132,26 @@ public class RenderUtils {
     public static PartRenderer createBaramClassicBodyRenderer () {
         return new PartRenderer("C_Body", Resources.BARAM_DATA_DIRECTORY);
     }
-    public static PartRenderer createBodyRenderer () { return new PartRenderer("Body"); }
-    public static PartRenderer createBowRenderer () {
-        return new PartRenderer("Bow");
+    public static PartRenderer createBodyRenderer (DatFileHandler charDat) { return new PartRenderer("Body", charDat, false); }
+    public static PartRenderer createBowRenderer (DatFileHandler charDat) {
+        return new PartRenderer("Bow", charDat, false);
     }
-    public static PartRenderer createCoatRenderer () {
-        return new PartRenderer("Coat");
+    public static PartRenderer createCoatRenderer (DatFileHandler charDat) {
+        return new PartRenderer("Coat", charDat, false);
     }
     public static EffectRenderer createEffectRenderer () {
         return new EffectRenderer();
     }
-    public static PartRenderer createFaceRenderer () {
-        return new PartRenderer("Face");
+    public static PartRenderer createFaceRenderer (DatFileHandler charDat) {
+        return new PartRenderer("Face", charDat, false);
     }
-    public static PartRenderer createFaceDecRenderer () { return new PartRenderer("FaceDec"); }
-    public static PartRenderer createFanRenderer () {
-        return new PartRenderer("Fan");
+    public static PartRenderer createFaceDecRenderer (DatFileHandler charDat) { return new PartRenderer("FaceDec", charDat, false); }
+    public static PartRenderer createFanRenderer (DatFileHandler charDat) {
+        return new PartRend`er("Fan", charDat, false);
     }
-    public static PartRenderer createHairRenderer () { return new PartRenderer("Hair");}
-    public static PartRenderer createHelmetRenderer () {
-        return new PartRenderer("Helmet");
+    public static PartRenderer createHairRenderer (DatFileHandler charDat) { return new PartRenderer("Hair", charDat, false);}
+    public static PartRenderer createHelmetRenderer (DatFileHandler charDat) {
+        return new PartRenderer("Helmet", charDat, false);
     }
     public static TileRenderer createItemRenderer () {
         String ntkDataDirectory = Resources.getNtkDataDirectory();
@@ -185,8 +183,8 @@ public class RenderUtils {
 
         return new TileRenderer(new ArrayList<EpfFileHandler>(Arrays.asList(epf)), pal, 0);
     }
-    public static PartRenderer createMantleRenderer () {
-        return new PartRenderer("Mantle");
+    public static PartRenderer createMantleRenderer (DatFileHandler charDat) {
+        return new PartRenderer("Mantle", charDat, false);
     }
     public static MapRenderer createMapRenderer () { return new MapRenderer(); }
     public static ArrayList<TileRenderer> createMiniMapResourceRenderers () {
@@ -205,15 +203,15 @@ public class RenderUtils {
     public static MobRenderer createMobRenderer () {
         return new MobRenderer();
     }
-    public static PartRenderer createSpearRenderer () {
-        return new PartRenderer("Spear");
+    public static PartRenderer createSpearRenderer (DatFileHandler charDat) {
+        return new PartRenderer("Spear", charDat, false);
     }
-    public static PartRenderer createShieldRenderer () { return new PartRenderer("Shield"); }
-    public static PartRenderer createShoeRenderer () {
-        return new PartRenderer("Shoes");
+    public static PartRenderer createShieldRenderer (DatFileHandler charDat) { return new PartRenderer("Shield", charDat, false); }
+    public static PartRenderer createShoeRenderer (DatFileHandler charDat) {
+        return new PartRenderer("Shoes", charDat, false);
     }
-    public static PartRenderer createSwordRenderer () {
-        return new PartRenderer("Sword");
+    public static PartRenderer createSwordRenderer (DatFileHandler charDat) {
+        return new PartRenderer("Sword", charDat, false);
     }
     public static ArrayList<TileRenderer> createWorldMapRenderers () {
         ArrayList<TileRenderer> worldMapRenderers = new ArrayList<TileRenderer>();

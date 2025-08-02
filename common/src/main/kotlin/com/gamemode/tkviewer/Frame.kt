@@ -1,9 +1,6 @@
 package com.gamemode.tkviewer
 
 import com.gamemode.tkviewer.resources.Stencil
-import java.nio.ByteBuffer
-
-import com.gamemode.tkviewer.resources.Stencil
 import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
 import kotlin.math.pow
@@ -17,7 +14,7 @@ class Frame(
 
     constructor(image: BufferedImage, palette: Palette) : this(
         0, 0, image.height, image.width, image.width, image.height,
-        0L, 0L, ByteBuffer.allocate(0), ByteBuffer.allocate(0), Stencil(false, listOf())
+        0L, 0L, ByteBuffer.allocate(0), ByteBuffer.allocate(0), Stencil(mutableListOf<BooleanArray>())
     ) {
         val pixelData = ByteArray(image.width * image.height)
         val stencilRows = mutableListOf<BooleanArray>()
@@ -38,7 +35,7 @@ class Frame(
         }
 
         this.rawPixelData = ByteBuffer.wrap(pixelData)
-        this.stencil = Stencil(false, stencilRows)
+        this.stencil = Stencil(stencilRows)
         this.rawStencilData = this.stencil.toByteBuffer()
     }
 
