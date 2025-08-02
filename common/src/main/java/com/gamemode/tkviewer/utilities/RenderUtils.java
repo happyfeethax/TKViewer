@@ -147,7 +147,7 @@ public class RenderUtils {
     }
     public static PartRenderer createFaceDecRenderer (DatFileHandler charDat) { return new PartRenderer("FaceDec", charDat, false); }
     public static PartRenderer createFanRenderer (DatFileHandler charDat) {
-        return new PartRend`er("Fan", charDat, false);
+        return new PartRenderer("Fan", charDat, false);
     }
     public static PartRenderer createHairRenderer (DatFileHandler charDat) { return new PartRenderer("Hair", charDat, false);}
     public static PartRenderer createHelmetRenderer (DatFileHandler charDat) {

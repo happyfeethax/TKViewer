@@ -6,10 +6,15 @@ import com.gamemode.tkviewer.Part;
 import com.gamemode.tkviewer.render.*;
 import com.gamemode.tkviewer.render.Renderer;
 import com.gamemode.tkviewer.resources.Resources;
+import com.gamemode.tkviewer.file_handlers.DatFileHandler;
+import com.gamemode.tkviewer.file_handlers.EpfFileHandler;
 import com.gamemode.tkviewer.utilities.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.swing.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -470,7 +475,7 @@ public class ViewFrame extends JFrame implements ActionListener {
                 for (int selectedFrame : selectedFrames) {
                     int frameIndex = renderers.get(rendererIndex).getFrameIndex(index, selectedFrame);
                     PartRenderer partRenderer = (PartRenderer) renderers.get(rendererIndex);
-                    Frame newFrame = new Frame(replacementImage, partRenderer.partPal.getPalettes().get((int)partRenderer.partDsc.getParts().get(index).getPaletteId()));
+                    com.gamemode.tkviewer.Frame newFrame = new com.gamemode.tkviewer.Frame(replacementImage, partRenderer.partPal.palettes.get((int)partRenderer.partDsc.parts.get(index).getPaletteId()));
                     renderers.get(rendererIndex).replaceFrame(index, frameIndex, newFrame);
                 }
                 renderFrames(index);

@@ -1,6 +1,7 @@
 package com.gamemode.tkviewer.gui;
 
 import com.gamemode.tkviewer.file_handlers.CmpFileHandler;
+import com.gamemode.tkviewer.file_handlers.DatFileHandler;
 import com.gamemode.tkviewer.file_handlers.MapFileHandler;
 import com.gamemode.tkviewer.file_handlers.MnmFileHandler;
 import com.gamemode.tkviewer.render.*;

@@ -2,6 +2,7 @@ package com.gamemode.tkviewer.gui;
 
 import com.gamemode.tkviewer.PartInfo;
 import com.gamemode.tkviewer.file_handlers.CmpFileHandler;
+import com.gamemode.tkviewer.file_handlers.DatFileHandler;
 import com.gamemode.tkviewer.render.PartRenderer;
 import com.gamemode.tkviewer.EffectImage;
 import com.gamemode.tkviewer.Part;
@@ -59,6 +60,7 @@ public class TKPartPickerGUI extends JFrame implements ActionListener {
     Integer tickValue = 0;
 
     LinkedHashMap<String, PartInfo> characterPartInfo;
+    DatFileHandler charDat;
 
     int partValue = 0;
 
@@ -68,22 +70,24 @@ public class TKPartPickerGUI extends JFrame implements ActionListener {
         this.clientIcon = Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("client_icon.png"));
         this.setIconImage(this.clientIcon);
 
+        charDat = new DatFileHandler(Resources.getNtkDataDirectory() + File.separator + "char.dat");
+
         characterPartInfo = new LinkedHashMap<String, PartInfo>();
-        characterPartInfo.put("Bodies", new PartInfo(3, 2, 6, -1, true, RenderUtils.createBodyRenderer()));
-        characterPartInfo.put("Coats", new PartInfo(0, 2, 6,-1,false, RenderUtils.createCoatRenderer()));
-        characterPartInfo.put("Shoes", new PartInfo(0, 0, 6,-1,false, RenderUtils.createShoeRenderer()));
-        characterPartInfo.put("Mantles", new PartInfo(0, 0,6,-1,false, RenderUtils.createMantleRenderer()));
+        characterPartInfo.put("Bodies", new PartInfo(3, 2, 6, -1, true, RenderUtils.createBodyRenderer(charDat)));
+        characterPartInfo.put("Coats", new PartInfo(0, 2, 6,-1,false, RenderUtils.createCoatRenderer(charDat)));
+        characterPartInfo.put("Shoes", new PartInfo(0, 0, 6,-1,false, RenderUtils.createShoeRenderer(charDat)));
+        characterPartInfo.put("Mantles", new PartInfo(0, 0,6,-1,false, RenderUtils.createMantleRenderer(charDat)));
 
-        characterPartInfo.put("Faces", new PartInfo(0, 2,6,-1,true, RenderUtils.createFaceRenderer()));
-        characterPartInfo.put("Face Decorations", new PartInfo(0,2, 6,-1,false, RenderUtils.createFaceDecRenderer()));
-        characterPartInfo.put("Hair", new PartInfo(0, 2,6,-1,true, RenderUtils.createHairRenderer()));
-        characterPartInfo.put("Helmets", new PartInfo(0, 2,6,-1,false, RenderUtils.createHelmetRenderer()));
+        characterPartInfo.put("Faces", new PartInfo(0, 2,6,-1,true, RenderUtils.createFaceRenderer(charDat)));
+        characterPartInfo.put("Face Decorations", new PartInfo(0,2, 6,-1,false, RenderUtils.createFaceDecRenderer(charDat)));
+        characterPartInfo.put("Hair", new PartInfo(0, 2,6,-1,true, RenderUtils.createHairRenderer(charDat)));
+        characterPartInfo.put("Helmets", new PartInfo(0, 2,6,-1,false, RenderUtils.createHelmetRenderer(charDat)));
 
-        characterPartInfo.put("Spears", new PartInfo(0, 1,6,-1,false, RenderUtils.createSpearRenderer()));
-        characterPartInfo.put("Shields", new PartInfo(0, 2,9,-1,false, RenderUtils.createShieldRenderer()));
-        characterPartInfo.put("Swords", new PartInfo(0, 2,6,-1,false, RenderUtils.createSwordRenderer()));
-        characterPartInfo.put("Bows", new PartInfo(0, 2,3,-1,false, RenderUtils.createBowRenderer()));
-        characterPartInfo.put("Fans", new PartInfo(0, 2,3,-1,false, RenderUtils.createFanRenderer()));
+        characterPartInfo.put("Spears", new PartInfo(0, 1,6,-1,false, RenderUtils.createSpearRenderer(charDat)));
+        characterPartInfo.put("Shields", new PartInfo(0, 2,9,-1,false, RenderUtils.createShieldRenderer(charDat)));
+        characterPartInfo.put("Swords", new PartInfo(0, 2,6,-1,false, RenderUtils.createSwordRenderer(charDat)));
+        characterPartInfo.put("Bows", new PartInfo(0, 2,3,-1,false, RenderUtils.createBowRenderer(charDat)));
+        characterPartInfo.put("Fans", new PartInfo(0, 2,3,-1,false, RenderUtils.createFanRenderer(charDat)));
 
         initMenu();
         initPanel();
