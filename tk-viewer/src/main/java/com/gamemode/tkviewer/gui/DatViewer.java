@@ -61,9 +61,9 @@ public class DatViewer extends JFrame {
                     selectedFrame = null;
                     EpfFileHandler epfFileHandler = new EpfFileHandler(datFileHandler.getFile(selectedFile), selectedFile);
                     TileRenderer tileRenderer = new TileRenderer(java.util.Arrays.asList(epfFileHandler), palFileHandler, 0);
-                    for (int i = 0; i < epfFileHandler.frameCount; i++) {
-                        JLabel label = new JLabel(new ImageIcon(tileRenderer.renderTile(i)));
-                        final int frameIndex = i;
+                    for (int j = 0; j < epfFileHandler.frameCount; j++) {
+                        JLabel label = new JLabel(new ImageIcon(tileRenderer.renderTile(j)));
+                        final int frameIndex = j;
                         label.addMouseListener(new java.awt.event.MouseAdapter() {
                             public void mouseClicked(java.awt.event.MouseEvent evt) {
                                 if (selectedLabel != null) {
