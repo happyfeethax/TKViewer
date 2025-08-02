@@ -4,6 +4,7 @@ import com.gamemode.tkviewer.file_handlers.CmpFileHandler;
 import com.gamemode.tkviewer.file_handlers.DatFileHandler;
 import com.gamemode.tkviewer.file_handlers.MapFileHandler;
 import com.gamemode.tkviewer.file_handlers.MnmFileHandler;
+import com.gamemode.tkviewer.gui.MonDatViewer;
 import com.gamemode.tkviewer.render.*;
 import com.gamemode.tkviewer.render.Renderer;
 import com.gamemode.tkviewer.resources.Resources;
@@ -608,7 +609,12 @@ public class TKViewerGUI extends JFrame implements ActionListener {
 
             int result = fileChooser.showOpenDialog(this);
             if (result == JFileChooser.APPROVE_OPTION) {
-                new DatViewer(fileChooser.getSelectedFile());
+                File selectedFile = fileChooser.getSelectedFile();
+                if (selectedFile.getName().equalsIgnoreCase("mon.dat")) {
+                    new MonDatViewer(new DatFileHandler(selectedFile));
+                } else {
+                    new DatViewer(selectedFile);
+                }
             }
         }
         // Open Map
