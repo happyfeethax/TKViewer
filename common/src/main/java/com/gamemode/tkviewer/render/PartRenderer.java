@@ -233,6 +233,9 @@ public class PartRenderer implements Renderer {
     }
 
     public String getEpfNameForFrame( int frameOffset) {
+        if (this.partDsc == null) {
+            return this.partEpfs.get(0).filePath;
+        }
         long frameIndex = this.partDsc.parts.get(frameOffset).getFrameIndex();
 
         int epfIndex = 0;
@@ -338,6 +341,9 @@ public class PartRenderer implements Renderer {
     }
 
     public List<EffectImage> renderAnimation(int partIndex, int chunkIndex, int manualPaletteIndex) {
+        if (this.partDsc == null) {
+            return new ArrayList<EffectImage>();
+        }
         Part part = this.partDsc.parts.get(partIndex);
         PartChunk chunk = part.getChunks().get(chunkIndex);
 
@@ -408,6 +414,10 @@ public class PartRenderer implements Renderer {
     public Dimension getMaxDimensionsForOffset(int frameOffset) {
         Dimension returnDim = new Dimension(0, 0);
 
+        if (this.partDsc == null) {
+            return getMaxDimensions(frameOffset);
+        }
+
         for (int i = 0; i < this.partDsc.partCount; i++) {
             Part part = this.partDsc.parts.get(i);
             Frame frame = getFrame((int) part.getFrameIndex(), frameOffset);
@@ -425,17 +435,15 @@ public class PartRenderer implements Renderer {
 
     @Override
     public int getCount(boolean useEpfCount) {
-        int output = 0;
-
-        if (!useEpfCount) {
-            output = (int) this.partDsc.partCount;
+        if (!useEpfCount && this.partDsc != null) {
+            return (int) this.partDsc.partCount;
         } else {
+            int output = 0;
             for (EpfFileHandler epf : this.partEpfs) {
                 output += epf.frameCount;
             }
+            return output;
         }
-
-        return output;
     }
 
     @Override
@@ -474,7 +482,11 @@ public class PartRenderer implements Renderer {
 
     @Override
     public int getFrameIndex(int index, int offset) {
-        return (int) this.partDsc.parts.get(index).getFrameIndex() + offset;
+        if (this.partDsc != null) {
+            return (int) this.partDsc.parts.get(index).getFrameIndex() + offset;
+        } else {
+            return index;
+        }
     }
 
     @Override
