@@ -301,6 +301,10 @@ public class ViewFrame extends JFrame implements ActionListener {
         }
 
         PartRenderer partRenderer = ((PartRenderer) renderers.get(rendererIndex));
+        if (partRenderer.partDsc == null) {
+            // Cannot render animations without a DSC file.
+            return;
+        }
 
         List<String> gifPaths = new ArrayList<String>();
         Part part = partRenderer.partDsc.parts.get(index);
