@@ -1,8 +1,11 @@
 package com.gamemode.tkviewer.gui;
 
 import com.gamemode.tkviewer.file_handlers.CmpFileHandler;
+import com.gamemode.tkviewer.file_handlers.DatFileHandler;
+import com.gamemode.tkviewer.file_handlers.EpfFileHandler;
 import com.gamemode.tkviewer.file_handlers.MapFileHandler;
 import com.gamemode.tkviewer.file_handlers.MnmFileHandler;
+import com.gamemode.tkviewer.file_handlers.PalFileHandler;
 import com.gamemode.tkviewer.render.*;
 import com.gamemode.tkviewer.render.Renderer;
 import com.gamemode.tkviewer.resources.Resources;
@@ -16,6 +19,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
+import javax.swing.JPanel;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
@@ -27,6 +31,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class TKViewerGUI extends JFrame implements ActionListener {
 
@@ -36,6 +43,7 @@ public class TKViewerGUI extends JFrame implements ActionListener {
 
     JMenu fileMenu = new JMenu("File");
     JMenu openMenu = new JMenu("Open");
+    JMenuItem openDatMenuItem = new JMenuItem("Dat File (*.dat)");
     JMenuItem openMapMenuItem = new JMenuItem("Map File (*.cmp | *.map)");
     JMenuItem exitMenuItem = new JMenuItem("Exit");
 
@@ -117,6 +125,10 @@ public class TKViewerGUI extends JFrame implements ActionListener {
         // Add Menu
         menuBar = new JMenuBar();
         this.setJMenuBar(menuBar);
+
+        // File > Open > Dat File
+        openDatMenuItem.addActionListener(this);
+        openMenu.add(openDatMenuItem);
 
         // File > Open > Map File
         openMapMenuItem.addActionListener(this);
@@ -583,10 +595,99 @@ public class TKViewerGUI extends JFrame implements ActionListener {
         }
     }
 
+    public void openDat(File datFile) {
+        DatFileHandler datFileHandler = new DatFileHandler(datFile);
+
+        List<String> epfFiles = datFileHandler.files.keySet().stream()
+                .filter(f -> f.toLowerCase().endsWith(".epf"))
+                .collect(Collectors.toList());
+
+        JList<String> epfList = new JList<>(epfFiles.toArray(new String[0]));
+
+        JComboBox<Integer> paletteComboBox = new JComboBox<>();
+        paletteComboBox.setEnabled(false);
+
+        epfList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                String selectedEpf = epfList.getSelectedValue();
+                if (selectedEpf != null) {
+                    String palFileName = FilenameUtils.getBaseName(selectedEpf) + ".pal";
+                    java.nio.ByteBuffer palFileBytes = datFileHandler.getFile(palFileName);
+                    if (palFileBytes != null) {
+                        PalFileHandler palFileHandler = new PalFileHandler(palFileBytes);
+                        paletteComboBox.removeAllItems();
+                        for (int i = 0; i < palFileHandler.palettes.size(); i++) {
+                            paletteComboBox.addItem(i);
+                        }
+                        paletteComboBox.setEnabled(true);
+                    } else {
+                        paletteComboBox.setEnabled(false);
+                        paletteComboBox.removeAllItems();
+                    }
+                }
+            }
+        });
+
+        JDialog datDialog = new JDialog(this, "Select EPF from " + datFile.getName(), true);
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JScrollPane(epfList), BorderLayout.CENTER);
+
+        JButton viewButton = new JButton("View");
+        viewButton.addActionListener(e -> {
+            String selectedEpf = epfList.getSelectedValue();
+            if (selectedEpf != null) {
+                EpfFileHandler epfFileHandler = new EpfFileHandler(datFileHandler.getFile(selectedEpf), selectedEpf);
+
+                String palFileName = FilenameUtils.getBaseName(selectedEpf) + ".pal";
+                PalFileHandler palFileHandler = null;
+                java.nio.ByteBuffer palFileBytes = datFileHandler.getFile(palFileName);
+                if (palFileBytes != null) {
+                    palFileHandler = new PalFileHandler(palFileBytes);
+                }
+
+                int selectedPalette = 0;
+                if (paletteComboBox.getSelectedItem() != null) {
+                    selectedPalette = (int) paletteComboBox.getSelectedItem();
+                }
+
+                PartRenderer renderer = new PartRenderer(
+                        java.util.Arrays.asList(epfFileHandler),
+                        palFileHandler,
+                        selectedPalette
+                );
+
+                new ViewFrame(selectedEpf, "Frame", "Frames", renderer);
+                datDialog.dispose();
+            }
+        });
+
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(paletteComboBox, BorderLayout.CENTER);
+        bottomPanel.add(viewButton, BorderLayout.EAST);
+        panel.add(bottomPanel, BorderLayout.SOUTH);
+
+        datDialog.add(panel);
+        datDialog.setSize(300, 400);
+        datDialog.setLocationRelativeTo(this);
+        datDialog.setVisible(true);
+    }
+
     @Override
     public void actionPerformed(ActionEvent ae) {
-        // Open Map
-        if (ae.getSource() == this.openMapMenuItem) {
+        if (ae.getSource() == this.openDatMenuItem) {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Select a NexusTK DAT file");
+
+            fileChooser.setCurrentDirectory(new File(Resources.getNtkDataDirectory()));
+            fileChooser.setAcceptAllFileFilterUsed(false);
+            FileNameExtensionFilter datFilter = new FileNameExtensionFilter("DAT files (*.dat)", "dat");
+            fileChooser.addChoosableFileFilter(datFilter);
+
+            int result = fileChooser.showOpenDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                this.openDat(fileChooser.getSelectedFile());
+            }
+        } else if (ae.getSource() == this.openMapMenuItem) {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Select a NexusTK map");
 

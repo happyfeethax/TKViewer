@@ -251,20 +251,24 @@ public class PartRenderer implements Renderer {
     }
 
     public Frame getFrame(int frameIndex, int frameOffset) {
-        int epfIndex = 0;
+        if (this.partDsc != null) {
+            int epfIndex = 0;
 
-        int frameCount = 0;
-        for (int i = 0; i < partEpfs.size(); i++) {
-            if ((frameIndex + frameOffset) < (frameCount + this.partEpfs.get(i).frameCount)) {
-                epfIndex = i;
-                break;
+            int frameCount = 0;
+            for (int i = 0; i < partEpfs.size(); i++) {
+                if ((frameIndex + frameOffset) < (frameCount + this.partEpfs.get(i).frameCount)) {
+                    epfIndex = i;
+                    break;
+                }
+
+                frameCount += this.partEpfs.get(i).frameCount;
             }
 
-            frameCount += this.partEpfs.get(i).frameCount;
+            Frame frame = this.partEpfs.get(epfIndex).getFrame(frameIndex + frameOffset - frameCount);
+            return frame;
+        } else {
+            return this.partEpfs.get(0).getFrame(frameIndex);
         }
-
-        Frame frame = this.partEpfs.get(epfIndex).getFrame(frameIndex + frameOffset - frameCount);
-        return frame;
     }
 
     public BufferedImage renderPart(int partIndex, int frameIndex, int frameOffset, int paletteIndex) {
@@ -291,14 +295,23 @@ public class PartRenderer implements Renderer {
             return image;
         }
 
-        Palette palette = this.partPal.palettes.get(paletteIndex);
-        IndexColorModel icm = new IndexColorModel(
-                8,
-                256,
-                palette.getRedBytes(),
-                palette.getGreenBytes(),
-                palette.getBlueBytes(),
-                Transparency.TRANSLUCENT);
+        IndexColorModel icm;
+        if (this.partPal != null) {
+            Palette palette = this.partPal.palettes.get(paletteIndex);
+            icm = new IndexColorModel(
+                    8,
+                    256,
+                    palette.getRedBytes(),
+                    palette.getGreenBytes(),
+                    palette.getBlueBytes(),
+                    Transparency.TRANSLUCENT);
+        } else {
+            byte[] gray = new byte[256];
+            for (int i = 0; i < 256; i++) {
+                gray[i] = (byte) i;
+            }
+            icm = new IndexColorModel(8, 256, gray, gray, gray);
+        }
 
         DataBufferByte buffer = new DataBufferByte(frame.getRawPixelData().array(), frame.getRawPixelData().capacity());
         WritableRaster raster = Raster.createPackedRaster(buffer, width, height, 8, null);
@@ -427,20 +440,36 @@ public class PartRenderer implements Renderer {
 
     @Override
     public int getCount() {
-        return getCount(false);
+        if (this.partDsc != null) {
+            return getCount(false);
+        } else {
+            int count = 0;
+            for (EpfFileHandler epf : this.partEpfs) {
+                count += epf.frameCount;
+            }
+            return count;
+        }
     }
 
     @Override
     public Image[] getFrames(int index) {
-        Image[] frames = new Image[(int) this.partDsc.parts.get(index).getFrameCount()];
-        for (int i = 0; i < this.partDsc.parts.get(index).getFrameCount(); i++) {
-            frames[i] = this.renderPart(index,
-                    (int) this.partDsc.parts.get(index).getFrameIndex(),
-                    i,
-                    (int) this.partDsc.parts.get(index).getPaletteId());
+        if (this.partDsc != null) {
+            Image[] frames = new Image[(int) this.partDsc.parts.get(index).getFrameCount()];
+            for (int i = 0; i < this.partDsc.parts.get(index).getFrameCount(); i++) {
+                frames[i] = this.renderPart(index,
+                        (int) this.partDsc.parts.get(index).getFrameIndex(),
+                        i,
+                        (int) this.partDsc.parts.get(index).getPaletteId());
+            }
+            return frames;
+        } else {
+            EpfFileHandler epf = this.partEpfs.get(0);
+            Image[] frames = new Image[epf.frameCount];
+            for (int i = 0; i < epf.frameCount; i++) {
+                frames[i] = this.renderPart(i, i, 0, this.manualPaletteIndex);
+            }
+            return frames;
         }
-
-        return frames;
     }
 
     @Override
@@ -453,8 +482,14 @@ public class PartRenderer implements Renderer {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("<html>");
 
+        Frame frame = null;
+        if (this.partDsc != null) {
+            frame = FileUtils.getFrameFromEpfs(index, this.partEpfs);
+        } else {
+            frame = this.partEpfs.get(0).getFrame(index);
+        }
+
         // Frame Info
-        Frame frame = FileUtils.getFrameFromEpfs(index, this.partEpfs);
         stringBuilder.append("Frame Info:<br>");
         stringBuilder.append("&nbsp;&nbsp;Dimensions: " + frame.getWidth() + "x" + frame.getHeight() + "<br>");
         stringBuilder.append("&nbsp;&nbsp;LTRB: (" + frame.getLeft() + ", " + frame.getTop() + ", " + frame.getRight() + ", " + frame.getBottom() + ")<br>");
