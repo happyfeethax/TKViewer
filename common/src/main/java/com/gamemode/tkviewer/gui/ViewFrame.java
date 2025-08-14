@@ -39,6 +39,7 @@ public class ViewFrame extends JFrame implements ActionListener {
     Integer itemCount;
 
     JButton exportButton;
+    JButton exportAllButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
     JComboBox<Integer> scaleComboBox;
@@ -153,7 +154,11 @@ public class ViewFrame extends JFrame implements ActionListener {
         scaleComboBox = new JComboBox<>(scaleFactors);
         scaleComboBox.addActionListener(this);
 
+        exportAllButton = new JButton("Export All Frames");
+        exportAllButton.addActionListener(this);
+
         statusPanel.add(exportButton);
+        statusPanel.add(exportAllButton);
 
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
@@ -423,6 +428,41 @@ public class ViewFrame extends JFrame implements ActionListener {
         }
     }
 
+    public void exportAllFrames() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setDialogTitle("Choose export directory");
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            for (int i = 0; i < itemCount; i++) {
+                int rendererIndex = determineRendererIndex(i);
+                int epfIndex = determineEpfIndex(i);
+                Image[] images = renderers.get(rendererIndex).getFrames(epfIndex);
+                for (int j = 0; j < images.length; j++) {
+                    Image imageToExport = images[j];
+                    int scaleFactor = (int) scaleComboBox.getSelectedItem();
+                    if (scaleFactor > 1) {
+                        int newWidth = imageToExport.getWidth(null) * scaleFactor;
+                        int newHeight = imageToExport.getHeight(null) * scaleFactor;
+                        if (newWidth > 0 && newHeight > 0) {
+                            imageToExport = imageToExport.getScaledInstance(newWidth, newHeight, Image.SCALE_REPLICATE);
+                        }
+                    }
+
+                    BufferedImage bufferedImage = new BufferedImage(imageToExport.getWidth(null), imageToExport.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D bGr = bufferedImage.createGraphics();
+                    bGr.drawImage(imageToExport, 0, 0, null);
+                    bGr.dispose();
+
+                    final int frameIndex = renderers.get(rendererIndex).getFrameIndex(epfIndex, j);
+                    FileUtils.writeBufferedImageToFile(bufferedImage, Paths.get(fileChooser.getSelectedFile().toString(), singular + "-" + i + "-" + frameIndex + ".png").toString());
+                }
+            }
+
+            JOptionPane.showMessageDialog(this, "All frames exported successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent ae) {
         int listIndex = list.getSelectedIndex();
@@ -442,6 +482,8 @@ public class ViewFrame extends JFrame implements ActionListener {
             }
         } else if (ae.getSource() == this.exportButton) {
             this.exportFrames(listIndex);
+        } else if (ae.getSource() == this.exportAllButton) {
+            this.exportAllFrames();
         } else if (ae.getSource() == this.scaleComboBox) {
             if (this.framesButton.isSelected()) {
                 this.renderFrames(listIndex);
