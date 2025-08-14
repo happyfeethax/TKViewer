@@ -471,11 +471,8 @@ public class PartRenderer implements Renderer {
             }
             return frames;
         } else {
-            EpfFileHandler epf = this.partEpfs.get(0);
-            Image[] frames = new Image[epf.frameCount];
-            for (int i = 0; i < epf.frameCount; i++) {
-                frames[i] = this.renderPart(i, i, 0, this.manualPaletteIndex);
-            }
+            Image[] frames = new Image[1];
+            frames[0] = this.renderPart(index, index, 0, this.manualPaletteIndex);
             return frames;
         }
     }
