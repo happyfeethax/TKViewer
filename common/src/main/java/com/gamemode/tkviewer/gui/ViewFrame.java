@@ -41,6 +41,7 @@ public class ViewFrame extends JFrame implements ActionListener {
     JButton exportButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
+    JCheckBox scaleCheckBox;
 
     public ViewFrame(String title, String singular, String plural) {
         // Configure Frame
@@ -148,10 +149,14 @@ public class ViewFrame extends JFrame implements ActionListener {
         framesButton.addActionListener(this);
         animationsButton.addActionListener(this);
 
+        scaleCheckBox = new JCheckBox("Scale x8");
+        scaleCheckBox.addActionListener(this);
+
         statusPanel.add(exportButton);
 
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
+        statusPanel.add(scaleCheckBox);
 
         this.add(scroller, BorderLayout.WEST);
         this.add(imagePanel, BorderLayout.CENTER);
@@ -342,8 +347,16 @@ public class ViewFrame extends JFrame implements ActionListener {
 
         Image[] images = renderers.get(rendererIndex).getFrames(index);
         for (int i = 0; i < images.length; i++) {
+            Image imageToDisplay = images[i];
+            if (scaleCheckBox.isSelected()) {
+                int newWidth = imageToDisplay.getWidth(null) * 8;
+                int newHeight = imageToDisplay.getHeight(null) * 8;
+                if (newWidth > 0 && newHeight > 0) {
+                    imageToDisplay = imageToDisplay.getScaledInstance(newWidth, newHeight, Image.SCALE_REPLICATE);
+                }
+            }
             final int frameIndex = renderers.get(rendererIndex).getFrameIndex(index, i);
-            JLabel jLabel = new JLabel(new ImageIcon(images[i]));
+            JLabel jLabel = new JLabel(new ImageIcon(imageToDisplay));
             jLabel.setToolTipText(String.valueOf(i));
             jLabel.addMouseListener(new MouseAdapter() {
                 @Override
@@ -411,6 +424,10 @@ public class ViewFrame extends JFrame implements ActionListener {
             }
         } else if (ae.getSource() == this.exportButton) {
             this.exportFrames(listIndex);
+        } else if (ae.getSource() == this.scaleCheckBox) {
+            if (this.framesButton.isSelected()) {
+                this.renderFrames(listIndex);
+            }
         }
     }
 }
