@@ -41,7 +41,7 @@ public class ViewFrame extends JFrame implements ActionListener {
     JButton exportButton;
     JRadioButton framesButton;
     JRadioButton animationsButton;
-    JCheckBox scaleCheckBox;
+    JComboBox<Integer> scaleComboBox;
 
     public ViewFrame(String title, String singular, String plural) {
         // Configure Frame
@@ -149,14 +149,16 @@ public class ViewFrame extends JFrame implements ActionListener {
         framesButton.addActionListener(this);
         animationsButton.addActionListener(this);
 
-        scaleCheckBox = new JCheckBox("Scale x8");
-        scaleCheckBox.addActionListener(this);
+        Integer[] scaleFactors = {1, 2, 3, 4, 5, 6, 7, 8};
+        scaleComboBox = new JComboBox<>(scaleFactors);
+        scaleComboBox.addActionListener(this);
 
         statusPanel.add(exportButton);
 
         statusPanel.add(framesButton);
         statusPanel.add(animationsButton);
-        statusPanel.add(scaleCheckBox);
+        statusPanel.add(new JLabel("      Scale:"));
+        statusPanel.add(scaleComboBox);
 
         this.add(scroller, BorderLayout.WEST);
         this.add(imagePanel, BorderLayout.CENTER);
@@ -348,9 +350,10 @@ public class ViewFrame extends JFrame implements ActionListener {
         Image[] images = renderers.get(rendererIndex).getFrames(index);
         for (int i = 0; i < images.length; i++) {
             Image imageToDisplay = images[i];
-            if (scaleCheckBox.isSelected()) {
-                int newWidth = imageToDisplay.getWidth(null) * 8;
-                int newHeight = imageToDisplay.getHeight(null) * 8;
+            int scaleFactor = (int) scaleComboBox.getSelectedItem();
+            if (scaleFactor > 1) {
+                int newWidth = imageToDisplay.getWidth(null) * scaleFactor;
+                int newHeight = imageToDisplay.getHeight(null) * scaleFactor;
                 if (newWidth > 0 && newHeight > 0) {
                     imageToDisplay = imageToDisplay.getScaledInstance(newWidth, newHeight, Image.SCALE_REPLICATE);
                 }
@@ -397,8 +400,23 @@ public class ViewFrame extends JFrame implements ActionListener {
         if (result == JFileChooser.APPROVE_OPTION) {
             Image[] images = renderers.get(rendererIndex).getFrames(index);
             for (int i = 0; i < images.length; i++) {
+                Image imageToExport = images[i];
+                int scaleFactor = (int) scaleComboBox.getSelectedItem();
+                if (scaleFactor > 1) {
+                    int newWidth = imageToExport.getWidth(null) * scaleFactor;
+                    int newHeight = imageToExport.getHeight(null) * scaleFactor;
+                    if (newWidth > 0 && newHeight > 0) {
+                        imageToExport = imageToExport.getScaledInstance(newWidth, newHeight, Image.SCALE_REPLICATE);
+                    }
+                }
+
+                BufferedImage bufferedImage = new BufferedImage(imageToExport.getWidth(null), imageToExport.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+                Graphics2D bGr = bufferedImage.createGraphics();
+                bGr.drawImage(imageToExport, 0, 0, null);
+                bGr.dispose();
+
                 final int frameIndex = renderers.get(rendererIndex).getFrameIndex(index, i);
-                FileUtils.writeBufferedImageToFile(((BufferedImage) images[i]), Paths.get(fileChooser.getSelectedFile().toString(), singular + "-" + index + "-" + frameIndex + ".png").toString());
+                FileUtils.writeBufferedImageToFile(bufferedImage, Paths.get(fileChooser.getSelectedFile().toString(), singular + "-" + index + "-" + frameIndex + ".png").toString());
             }
 
             JOptionPane.showMessageDialog(this, "Frames exported successfully!", "TKViewer", JOptionPane.INFORMATION_MESSAGE);
@@ -424,7 +442,7 @@ public class ViewFrame extends JFrame implements ActionListener {
             }
         } else if (ae.getSource() == this.exportButton) {
             this.exportFrames(listIndex);
-        } else if (ae.getSource() == this.scaleCheckBox) {
+        } else if (ae.getSource() == this.scaleComboBox) {
             if (this.framesButton.isSelected()) {
                 this.renderFrames(listIndex);
             }
