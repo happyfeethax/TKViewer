@@ -15,6 +15,21 @@ public abstract class FileHandler {
     public Boolean decode;
     public RandomAccessFile fileInputStream;
 
+    public boolean eof() {
+        if (this.file != null) {
+            try {
+                return (this.fileInputStream.getFilePointer() >= this.fileInputStream.length());
+            } catch (IOException ioe) {
+                System.out.println("Error getting file pointer: " + ioe);
+                return true;
+            }
+        } else if (this.bytes != null) {
+            return !this.bytes.hasRemaining();
+        }
+
+        return true;
+    }
+
     public abstract ByteBuffer toByteBuffer();
     public int getLength() {
         if (this.file != null) {

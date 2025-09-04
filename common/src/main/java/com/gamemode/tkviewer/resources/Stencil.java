@@ -28,6 +28,9 @@ public class Stencil {
 
             // Read row (until we encounter a 0x00 byte)
             while(true) {
+                if (epfFileHandler.eof()) {
+                    break;
+                }
                 int stencilValue = epfFileHandler.readUnsignedByte();
                 rawStencilDataArray.add((byte)stencilValue);
 

@@ -45,6 +45,12 @@ public class DatFileHandler extends FileHandler {
             }
             long nextFileLocation = this.filePosition;
             long fileSize = this.readInt(true, true) - dataLocation;
+            if (fileSize < 0) {
+                System.err.println("Error: Negative file size (" + fileSize + ") calculated for " + fileName + ". Skipping this file.");
+                this.seek(nextFileLocation, true);
+                this.readInt(true, true); // Consume the 'next file location' int
+                continue;
+            }
             this.seek(dataLocation, true);
             ByteBuffer fileData = this.readBytes(fileSize, true);
             files.put(fileName, fileData);
