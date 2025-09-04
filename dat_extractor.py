@@ -31,22 +31,39 @@ class KotWDatExtractor:
         with open(self.dat_file, 'rb') as f:
             # Read first few bytes to identify format
             header = f.read(64)
+            format_type = "Unknown DAT Format" # Default
             
             # Try standard DAT format first
             f.seek(0)
             try:
                 self._parse_standard_dat_format(f)
-                format_type = "Standard NexusTK DAT Format"
+                if self.file_entries:
+                    format_type = "Standard NexusTK DAT Format"
             except Exception as e:
                 print(f"Standard format parsing failed: {e}")
-                # Try variant format (like BigSword archives)
+                self.file_entries = [] # Ensure list is empty after failure
+
+            # If standard format fails or finds nothing, try variant
+            if not self.file_entries:
                 f.seek(0)
                 try:
                     self._parse_variant_dat_format(f)
-                    format_type = "Variant DAT Format (BigSword style)"
+                    if self.file_entries:
+                        format_type = "Variant DAT Format (BigSword style)"
                 except Exception as e2:
                     print(f"Variant format parsing failed: {e2}")
-                    format_type = "Unknown DAT Format"
+                    self.file_entries = []
+
+            # If all primary methods fail, attempt a raw scan as a fallback
+            if not self.file_entries:
+                f.seek(0)
+                try:
+                    self._parse_raw_directory_scan(f)
+                    if self.file_entries:
+                        format_type = "Raw Scanned DAT Format"
+                except Exception as e3:
+                    print(f"Raw directory scan failed: {e3}")
+                    self.file_entries = []
         
         self.file_info = {
             'path': str(self.dat_file),
@@ -122,6 +139,32 @@ class KotWDatExtractor:
         if len(all_filenames) > 20:
             print(f"... and {len(all_filenames) - 20} more")
         
+        # --- Start of new validation logic ---
+
+        # Get total file size for validation
+        total_file_size = self.dat_file.stat().st_size
+
+        # 1. Validate filenames for non-printable characters
+        for filename, _, _ in entries:
+            if not all(c.isprintable() or c in ('\n', '\r', '\t') for c in filename):
+                raise ValueError(f"Invalid characters found in filename '{filename}'")
+
+        # 2. Validate offsets
+        last_offset = 0
+        for filename, offset, _ in entries:
+            if offset >= total_file_size:
+                raise ValueError(f"Offset 0x{offset:08x} for file '{filename}' is out of bounds (file size: 0x{total_file_size:08x})")
+            if offset < last_offset:
+                # Allow for unsorted entries, but log it as a potential issue
+                # and prepare for sorting later.
+                print(f"Warning: Offsets are not strictly increasing. Last: 0x{last_offset:08x}, current: 0x{offset:08x} for '{filename}'")
+            last_offset = offset
+
+        # Sort entries by offset to correctly calculate sizes
+        entries.sort(key=lambda x: x[1])
+
+        # --- End of new validation logic ---
+
         # Calculate file sizes based on offset differences
         self.file_entries = []
         for i, (filename, offset, entry_pos) in enumerate(entries):
@@ -131,8 +174,12 @@ class KotWDatExtractor:
                 file_size = next_offset - offset
             else:
                 # Last file extends to end of archive
-                file_size = self.dat_file.stat().st_size - offset
+                file_size = total_file_size - offset
             
+            # Additional validation for calculated size
+            if file_size < 0:
+                 raise ValueError(f"Negative file size calculated for '{filename}' (size: {file_size})")
+
             if file_size > 0:
                 self.file_entries.append((filename, offset, file_size))
     
@@ -153,9 +200,8 @@ class KotWDatExtractor:
             # Variant format with fixed-size entries
             self._parse_fixed_size_entries(f, entry_size_or_count)
         else:
-            # Try as standard format without special header
-            f.seek(0)
-            self._parse_standard_dat_format(f)
+            # If not a recognized variant, raise an error to allow fallback
+            raise ValueError(f"Not a recognized variant DAT format (identifier: '{identifier}')")
     
     def _parse_fixed_size_entries(self, f, entry_size: int) -> None:
         """Parse fixed-size directory entries (like BigSword format)."""
@@ -337,31 +383,50 @@ class KotWDatExtractor:
                         any(potential_filename.lower().endswith(ext) 
                             for ext in ['.png', '.xml', '.jpg', '.gif', '.wav', '.mid', '.epf', '.pal', '.dna'])):
                         
-                        # Look for size/offset after the filename
-                        search_start = filename_end + 1
+                        # --- Bidirectional Scan Logic ---
+                        found_entry = False
                         
-                        # Skip null bytes
-                        while search_start < len(data) and data[search_start] == 0:
-                            search_start += 1
-                        
-                        # Try to find size and offset
-                        if search_start + 8 <= len(data):
+                        # 1. Scan *backwards* for potential offsets
+                        potential_offsets = []
+                        offset_scan_start = max(0, filename_start - 32)
+                        for i in range(offset_scan_start, filename_start, 4):
                             try:
-                                potential_size = struct.unpack('<I', data[search_start:search_start + 4])[0]
-                                potential_offset = struct.unpack('<I', data[search_start + 4:search_start + 8])[0]
-                                
-                                # Validate the values
-                                if (0 < potential_size < self.dat_file.stat().st_size and
-                                    potential_offset > 0 and
-                                    potential_offset < self.dat_file.stat().st_size and
-                                    potential_offset + potential_size <= self.dat_file.stat().st_size):
-                                    
-                                    entries.append((potential_filename, potential_offset, potential_size))
-                                    print(f"Raw scan found: {potential_filename} (offset: 0x{potential_offset:08x}, size: {potential_size:,})")
-                                    pos = search_start + 8
-                                    continue
+                                p_off = struct.unpack('<I', data[i:i+4])[0]
+                                if p_off > 0 and p_off < self.dat_file.stat().st_size:
+                                    potential_offsets.append(p_off)
                             except:
-                                pass
+                                continue
+                        
+                        # 2. Scan *forwards* for potential sizes
+                        potential_sizes = []
+                        size_scan_start = filename_end + 1
+                        while size_scan_start < len(data) and data[size_scan_start] == 0:
+                            size_scan_start += 1
+                        size_scan_end = min(len(data) - 4, size_scan_start + 32)
+
+                        for i in range(size_scan_start, size_scan_end, 4):
+                            try:
+                                p_size = struct.unpack('<I', data[i:i+4])[0]
+                                if p_size > 0 and p_size < self.dat_file.stat().st_size:
+                                    potential_sizes.append((p_size, i)) # Store position as well
+                            except:
+                                continue
+
+                        # 3. Find the best matching pair
+                        for p_offset in potential_offsets:
+                            for p_size, p_size_pos in potential_sizes:
+                                if p_offset + p_size <= self.dat_file.stat().st_size:
+                                    # Found a valid pair
+                                    entries.append((potential_filename, p_offset, p_size))
+                                    print(f"Raw scan found: {potential_filename} (offset: 0x{p_offset:08x}, size: {p_size:,})")
+                                    pos = p_size_pos + 4 # Advance cursor past this entry
+                                    found_entry = True
+                                    break
+                            if found_entry:
+                                break
+
+                        if found_entry:
+                            continue
             
             pos += 1
         

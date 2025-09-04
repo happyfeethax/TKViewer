@@ -121,3 +121,6 @@ game.log*
 ../tk-client/maps/objects
 screenshots
 ../tk-client/sprites
+
+# DAT extractor output
+damage_extracted/
