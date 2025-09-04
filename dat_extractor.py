@@ -344,110 +344,112 @@ class KotWDatExtractor:
         return additional_files
     
     def _parse_raw_directory_scan(self, f) -> None:
-        """Raw scan for directory entries when standard formats fail."""
-        print("Attempting raw directory scan...")
+        """
+        Parses a format where the directory contains (filename, end_offset) pairs,
+        and files are stored contiguously.
+        """
+        print("Attempting two-pass raw directory scan (end-offset format)...")
         
-        # Read first 4 bytes as potential file count
-        file_count_raw = struct.unpack('<I', f.read(4))[0]
-        file_count = file_count_raw - 1 if file_count_raw > 0 else file_count_raw
-        
-        print(f"Raw scan - potential file count: {file_count}")
-        
-        # Scan the first part of the file for directory-like structures
+        # === PASS 1: Find filename and end-offset pairs ===
         f.seek(0)
-        data = f.read(min(50000, self.dat_file.stat().st_size))  # Read first 50KB
+        data = f.read(min(50000, self.dat_file.stat().st_size))
         
-        entries = []
-        pos = 8  # Start after potential header
-        
+        directory_entries = []
+        last_entry_pos = 0
+        last_end_offset = 0 # Track the last valid end_offset found
+        pos = 8
+
         while pos < len(data) - 20:
-            # Look for null-terminated strings that could be filenames
             if data[pos] != 0 and chr(data[pos]).isprintable():
-                # Try to read a potential filename
                 filename_start = pos
-                filename_end = pos
+                filename_end = data.find(b'\x00', filename_start)
                 
-                # Find end of potential filename
-                while (filename_end < len(data) and 
-                       data[filename_end] != 0 and 
-                       chr(data[filename_end]).isprintable() and
-                       filename_end - filename_start < 100):
-                    filename_end += 1
-                
-                if filename_end > filename_start:
+                if filename_end != -1 and (filename_end - filename_start) < 100:
                     potential_filename = data[filename_start:filename_end].decode('utf-8', errors='ignore')
                     
-                    # Check if it looks like a real filename
-                    if (len(potential_filename) > 3 and 
-                        '.' in potential_filename and
-                        any(potential_filename.lower().endswith(ext) 
-                            for ext in ['.png', '.xml', '.jpg', '.gif', '.wav', '.mid', '.epf', '.pal', '.dna'])):
+                    if (len(potential_filename) > 3 and '.' in potential_filename and
+                        any(potential_filename.lower().endswith(ext) for ext in ['.png', '.xml', '.jpg', '.gif', '.wav', '.mid', '.epf', '.pal', '.dna'])):
                         
-                        # --- Bidirectional Scan Logic ---
-                        found_entry = False
+                        # --- Best-Fit End-Offset Logic ---
+                        scan_pos = filename_end + 1
+                        while scan_pos < len(data) and data[scan_pos] == 0:
+                            scan_pos += 1
                         
-                        # 1. Scan *backwards* for potential offsets
-                        potential_offsets = []
-                        offset_scan_start = max(0, filename_start - 32)
-                        for i in range(offset_scan_start, filename_start, 4):
+                        candidates = []
+                        # Scan a window for all plausible end-offsets
+                        for i in range(scan_pos, min(scan_pos + 24, len(data) - 4), 4):
                             try:
-                                p_off = struct.unpack('<I', data[i:i+4])[0]
-                                if p_off > 0 and p_off < self.dat_file.stat().st_size:
-                                    potential_offsets.append(p_off)
-                            except:
-                                continue
-                        
-                        # 2. Scan *forwards* for potential sizes
-                        potential_sizes = []
-                        size_scan_start = filename_end + 1
-                        while size_scan_start < len(data) and data[size_scan_start] == 0:
-                            size_scan_start += 1
-                        size_scan_end = min(len(data) - 4, size_scan_start + 32)
-
-                        for i in range(size_scan_start, size_scan_end, 4):
-                            try:
-                                p_size = struct.unpack('<I', data[i:i+4])[0]
-                                if p_size > 0 and p_size < self.dat_file.stat().st_size:
-                                    potential_sizes.append((p_size, i)) # Store position as well
+                                end_offset = struct.unpack('<I', data[i:i+4])[0]
+                                if end_offset > last_end_offset and end_offset < self.dat_file.stat().st_size:
+                                    candidates.append((end_offset, i + 4)) # Store position too
                             except:
                                 continue
 
-                        # 3. Find the best matching pair
-                        for p_offset in potential_offsets:
-                            for p_size, p_size_pos in potential_sizes:
-                                if p_offset + p_size <= self.dat_file.stat().st_size:
-                                    # Found a valid pair
-                                    entries.append((potential_filename, p_offset, p_size))
-                                    print(f"Raw scan found: {potential_filename} (offset: 0x{p_offset:08x}, size: {p_size:,})")
-                                    pos = p_size_pos + 4 # Advance cursor past this entry
-                                    found_entry = True
-                                    break
-                            if found_entry:
-                                break
+                        # Choose the best candidate (the smallest one greater than the last)
+                        if candidates:
+                            best_candidate = min(candidates, key=lambda x: x[0])
+                            end_offset, entry_pos = best_candidate
 
-                        if found_entry:
-                            continue
-            
+                            directory_entries.append({'name': potential_filename, 'end_offset': end_offset})
+                            last_end_offset = end_offset
+                            last_entry_pos = entry_pos
+                            pos = entry_pos
+                        else:
+                            pos += 1 # Move to next byte if no candidate found
             pos += 1
+
+        if not directory_entries:
+            print("Pass 1 did not find any valid directory entries.")
+            return
+
+        # === PASS 2: Calculate start offsets and sizes ===
+        print(f"\nPass 2: Calculating offsets and sizes for {len(directory_entries)} files...")
+
+        start_offset = last_entry_pos
+        final_entries = []
         
-        self.file_entries = entries
+        for entry in directory_entries:
+            end_offset = entry['end_offset']
+            size = end_offset - start_offset
+
+            if size < 0:
+                print(f"Warning: Negative size calculated for {entry['name']}. Skipping remaining files.")
+                break
+
+            final_entries.append((entry['name'], start_offset, size))
+            print(f"  Calculated: {entry['name']:<30} (offset: 0x{start_offset:08x}, size: {size:,})")
+            start_offset = end_offset # Next file starts where this one ends
+
+            if start_offset > self.dat_file.stat().st_size:
+                print("Warning: Calculated start offset exceeds file size. Aborting.")
+                break
+
+        self.file_entries = final_entries
     
-    def extract(self) -> bool:
-        """Extract all files from the DAT archive."""
+    def extract(self, single_file_to_extract: Optional[str] = None) -> bool:
+        """Extract files from the DAT archive."""
         if not self.file_entries:
             print("No files found to extract. Run analyze_file() first.")
             return False
         
         # Create output directory
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        print(f"\nExtracting to: {self.output_dir}")
         
+        files_to_process = self.file_entries
+        if single_file_to_extract:
+            print(f"\nAttempting to extract single file: {single_file_to_extract}")
+            files_to_process = [f for f in self.file_entries if f[0] == single_file_to_extract]
+            if not files_to_process:
+                print(f"Error: File '{single_file_to_extract}' not found in archive.")
+                return False
+        else:
+            print(f"\nExtracting to: {self.output_dir}")
+
         success_count = 0
         
         with open(self.dat_file, 'rb') as f:
-            for filename, offset, size in self.file_entries:
+            for filename, offset, size in files_to_process:
                 try:
-                    # Read file data
                     f.seek(offset)
                     file_data = f.read(size)
                     
@@ -455,11 +457,9 @@ class KotWDatExtractor:
                         print(f"Warning: {filename} - expected {size} bytes, got {len(file_data)}")
                         continue
                     
-                    # Create output path
                     output_path = self.output_dir / filename
                     output_path.parent.mkdir(parents=True, exist_ok=True)
                     
-                    # Write file
                     with open(output_path, 'wb') as out_file:
                         out_file.write(file_data)
                     
@@ -469,7 +469,8 @@ class KotWDatExtractor:
                 except Exception as e:
                     print(f"✗ Failed to extract {filename}: {e}")
         
-        print(f"\nExtraction complete: {success_count}/{len(self.file_entries)} files extracted successfully")
+        total_files = len(files_to_process)
+        print(f"\nExtraction complete: {success_count}/{total_files} files extracted successfully")
         return success_count > 0
     
     def hex_dump(self, num_bytes: int = 256) -> None:
@@ -508,7 +509,8 @@ class KotWDatExtractor:
 
 
 def extract_single_file(dat_file_path: str, output_dir: str = None, analyze_only: bool = False, 
-                       list_files: bool = False, hex_dump_size: int = 0) -> bool:
+                       list_files: bool = False, hex_dump_size: int = 0,
+                       file_to_extract: Optional[str] = None) -> bool:
     """Extract a single DAT file."""
     try:
         extractor = KotWDatExtractor(dat_file_path, output_dir)
@@ -523,6 +525,7 @@ def extract_single_file(dat_file_path: str, output_dir: str = None, analyze_only
         # List files if requested
         if list_files:
             extractor.list_files()
+            return True # --list implies no extraction
         
         if analyze_only:
             print("\nAnalysis complete.\n")
@@ -530,7 +533,7 @@ def extract_single_file(dat_file_path: str, output_dir: str = None, analyze_only
         
         # Attempt extraction
         if file_info['extractable']:
-            success = extractor.extract()
+            success = extractor.extract(file_to_extract)
             
             if success:
                 print(f"✅ Extraction completed successfully!")
@@ -618,6 +621,7 @@ def main():
     parser.add_argument('-a', '--analyze', action='store_true', help='Only analyze files, don\'t extract')
     parser.add_argument('-l', '--list', action='store_true', help='List files in archives')
     parser.add_argument('-x', '--hex', type=int, default=0, help='Show hex dump of first N bytes')
+    parser.add_argument('-e', '--extract-one', help='Extract only a single file by its name')
     
     args = parser.parse_args()
     
@@ -627,7 +631,10 @@ def main():
             batch_extract_folder(args.batch, args.output, args.analyze, args.list)
         elif args.dat_file:
             # Single file mode
-            success = extract_single_file(args.dat_file, args.output, args.analyze, args.list, args.hex)
+            success = extract_single_file(
+                args.dat_file, args.output, args.analyze,
+                args.list, args.hex, args.extract_one
+            )
             if not success:
                 sys.exit(1)
         else:
